@@ -128,8 +128,10 @@ def _main() -> int:
             + "\\n  "
             + str(alt)
             + "\\n"
-            "If those files are missing, add Dev Container bind mounts (see README Devcontainers); "
-            "workspaces bootstrapped without an existing .devcontainer get one with the needed mounts.\\n"
+            "If those files are missing, add Dev Container bind mounts "
+            "(see README Devcontainers); "
+            "workspaces bootstrapped without an existing .devcontainer get one "
+            "with the needed mounts.\\n"
             "To refresh this launcher, install the hframe package in this environment "
             "(pip install hframe) then run the install_workspace_shim one-liner from README "
             "Devcontainers.\\n"

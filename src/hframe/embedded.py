@@ -16,7 +16,10 @@ DEVCONTAINER_BOOTSTRAP_ROOT = Path("/workspaces/hframe-root")
 
 
 def _membrane_pyz_path() -> Path:
-    """Locate this zipapp on disk from ``sys.argv`` (zipapp runs use ``argv[0]`` as the ``.pyz``)."""
+    """Locate this zipapp on disk from ``sys.argv``.
+
+    Zipapp invocations use ``argv[0]`` as the path to the ``.pyz`` file.
+    """
     if not sys.argv:
         raise ValueError("missing sys.argv")
     arg0 = Path(sys.argv[0])

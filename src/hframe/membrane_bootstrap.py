@@ -33,6 +33,11 @@ AGENTS_APPEND = (
 
 # Dev Containers: default workspace is only the git repo, so ../.hframe is invisible unless
 # we add bind mounts. Two targets match shim_install.resolve_membrane_pyz (direct + hframe-root).
+# postCreateCommand: avoid dubious-ownership errors for interactive git in Dev Containers.
+_SAFE_DIR_POSTCREATE = (
+    "git config --global --get-all safe.directory 2>/dev/null | grep -qFx '*' || "
+    "git config --global --add safe.directory '*'"
+)
 _WORKSPACE_DEVCONTAINER = {
     "name": "hframe",
     "image": "mcr.microsoft.com/devcontainers/base:bookworm",
@@ -40,7 +45,7 @@ _WORKSPACE_DEVCONTAINER = {
         "source=${localWorkspaceFolder}/..,target=/workspaces/hframe-root,type=bind,consistency=cached",
         "source=${localWorkspaceFolder}/../.hframe,target=/workspaces/.hframe,type=bind,consistency=cached",
     ],
-    "postCreateCommand": "git config --global --get-all safe.directory 2>/dev/null | grep -qFx '*' || git config --global --add safe.directory '*'",
+    "postCreateCommand": _SAFE_DIR_POSTCREATE,
 }
 
 
