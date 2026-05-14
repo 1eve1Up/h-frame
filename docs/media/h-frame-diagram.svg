@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 232" width="760" height="232" role="img" aria-labelledby="hframe-topology-title hframe-topology-desc">
+  <title id="hframe-topology-title">H-Frame topology</title>
+  <desc id="hframe-topology-desc">Workspace Repo and Pinion on the left vertical, Customer Remote, git pull push, and Protected Repo on the right vertical, joined by a horizontal deterministic membrane at mid height.</desc>
+  <style>
+    .hf-box { fill: var(--color-canvas-default, #ffffff); stroke: #57606a; stroke-width: 1.5; }
+    .hf-line { stroke: #57606a; stroke-width: 2; fill: none; }
+    .hf-text { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; fill: #24292f; text-anchor: middle; }
+    .hf-sub { font-size: 11px; fill: #57606a; }
+    @media (prefers-color-scheme: dark) {
+      .hf-box { fill: #161b22; stroke: #8b949e; }
+      .hf-line { stroke: #8b949e; }
+      .hf-text { fill: #e6edf3; }
+      .hf-sub { fill: #8b949e; }
+    }
+  </style>
+  <line class="hf-line" x1="118" y1="116" x2="642" y2="116" />
+  <line class="hf-line" x1="118" y1="48" x2="118" y2="184" />
+  <line class="hf-line" x1="642" y1="48" x2="642" y2="184" />
+  <rect class="hf-box" x="188" y="92" width="356" height="48" rx="4" />
+  <text class="hf-text" x="366" y="114">deterministic membrane</text>
+  <text class="hf-sub" x="366" y="132">(allowlist, denylist outside agent control)</text>
+  <rect class="hf-box" x="38" y="8" width="160" height="40" rx="4" />
+  <text class="hf-text" x="118" y="33">Workspace Repo</text>
+  <rect class="hf-box" x="38" y="184" width="160" height="40" rx="4" />
+  <text class="hf-text" x="118" y="209">Pinion / agents</text>
+  <rect class="hf-box" x="562" y="8" width="160" height="40" rx="4" />
+  <text class="hf-text" x="642" y="33">Customer Remote Repo</text>
+  <rect class="hf-box" x="562" y="96" width="160" height="40" rx="4" />
+  <text class="hf-text" x="642" y="121">git pull/push</text>
+  <rect class="hf-box" x="562" y="184" width="160" height="40" rx="4" />
+  <text class="hf-text" x="642" y="209">Protected Repo</text>
+</svg>

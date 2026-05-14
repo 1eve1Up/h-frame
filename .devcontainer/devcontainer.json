@@ -1,0 +1,41 @@
+{
+  "name": "hframe",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11-bookworm",
+  "mounts": [
+    "source=${localWorkspaceFolder}/..,target=/workspaces/hframe-root,type=bind,consistency=cached"
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "os-provided"
+    }
+  },
+  "runArgs": ["--add-host=host.docker.internal:host-gateway"],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.terminal.activateEnvironment": false,
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter",
+          "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit"
+          }
+        },
+        "ruff.enable": true,
+        "ruff.organizeImports": true
+      }
+    }
+  },
+  "postCreateCommand": "pip install --upgrade pip setuptools wheel && if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi; git config --global --get-all safe.directory 2>/dev/null | grep -qFx '*' || git config --global --add safe.directory '*'",
+  "remoteUser": "vscode"
+}
