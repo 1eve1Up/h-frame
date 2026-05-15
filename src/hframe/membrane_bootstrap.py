@@ -10,6 +10,12 @@ from pathlib import Path
 from hframe.build_membrane_pyz import build_membrane_pyz
 from hframe.config import MEMBRANE_PYZ_NAME
 from hframe.git_ops import assert_no_remotes, clone, remove_all_remotes
+from hframe.gitignore_policy import (
+    format_bootstrap_allowlist_body,
+    format_seeded_denylist_body,
+    read_gitignore_deny_patterns,
+    root_allow_patterns_from_protected_repo,
+)
 from hframe.operations import default_policy_template
 from hframe.shim_install import install_workspace_shim
 
@@ -100,7 +106,10 @@ def membrane_directory_names(git_url: str) -> tuple[str, str]:
 def bootstrap_membrane(git_url: str, parent: Path | None = None) -> None:
     """
     Create ``parent/<slug>_repo``, ``parent/<slug>_workspace_repo``,
-    ``parent/.hframe/policy.allowlist`` and ``parent/.hframe/policy.denylist`` (templates),
+    ``parent/.hframe/policy.allowlist`` and ``parent/.hframe/policy.denylist``
+    (defaults when absent: allowlist built from non-ignored root paths via ``git check-ignore``;
+    denylist seeded from the protected clone's root ``.gitignore``; if no root paths qualify,
+    falls back to denylist-only policy),
     build ``parent/.hframe/hframe-membrane.pyz`` (source zipapp),
     install ``<slug>_workspace_repo/hframe`` (POSIX: portable ``python3`` launcher;
     Windows: prebuilt ``.exe``),
@@ -122,12 +131,9 @@ def bootstrap_membrane(git_url: str, parent: Path | None = None) -> None:
         raise ValueError(f"refusing to overwrite existing workspace: {workspace}")
 
     policy.parent.mkdir(parents=True, exist_ok=True)
-    if not policy.is_file():
-        policy.write_text(default_policy_template(), encoding="utf-8")
-
     deny_policy = root / POLICY_DENY_REL
-    if not deny_policy.is_file():
-        deny_policy.write_text(DEFAULT_DENYLIST_TEMPLATE, encoding="utf-8")
+    seed_allow = not policy.is_file()
+    seed_deny = not deny_policy.is_file()
 
     clone(git_url, original)
     subprocess.run(
@@ -138,6 +144,20 @@ def bootstrap_membrane(git_url: str, parent: Path | None = None) -> None:
     )
     remove_all_remotes(workspace)
     assert_no_remotes(workspace)
+
+    if seed_allow:
+        roots = root_allow_patterns_from_protected_repo(original)
+        if roots:
+            policy.write_text(format_bootstrap_allowlist_body(roots), encoding="utf-8")
+        else:
+            policy.write_text(default_policy_template(), encoding="utf-8")
+    if seed_deny:
+        deny_policy.write_text(
+            format_seeded_denylist_body(read_gitignore_deny_patterns(original)),
+            encoding="utf-8",
+        )
+    elif not deny_policy.is_file():
+        deny_policy.write_text(DEFAULT_DENYLIST_TEMPLATE, encoding="utf-8")
 
     bootstrap_root = policy.parent.parent.resolve()
     cfg = {

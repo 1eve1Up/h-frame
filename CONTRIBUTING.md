@@ -37,7 +37,7 @@ Integration tests are marked and require git and rsync; they use local `file://`
 
 ## Policy and membrane constraints
 
-- **Policy files** (`.hframe/policy.allowlist`, `.hframe/policy.denylist`) are host-local and should remain outside agent-only writable areas; see PRD “Allowlist Synchronization” and README policy section.
+- **Policy files** (`.hframe/policy.allowlist`, `.hframe/policy.denylist`) are host-local and should remain outside agent-only writable areas; see PRD policy model and README.
 - The **zipapp** embeds **bootstrap-relative** path segments at build time (legacy builds may still embed absolute paths); behavior changes that affect the agent bundle belong in tests that exercise `embedded` / membrane build paths where practical.
 
 ## Stability expectations

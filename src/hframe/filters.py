@@ -78,6 +78,9 @@ def build_rsync_filter_lines(
         "# never sync .git between repos",
         "- /.git/",
         "- /.git/***",
+        "# repo-root workspace launcher (bootstrap install; not in protected clone)",
+        "- /hframe",
+        "- /hframe/***",
     ]
     for g in DEFAULT_DENY_GLOBS:
         lines.extend(_deny_to_rsync_rules(g))
@@ -96,6 +99,9 @@ def build_rsync_deny_only_lines(extra_deny: list[str] | None = None) -> list[str
         "# never sync .git between repos",
         "- /.git/",
         "- /.git/***",
+        "# repo-root workspace launcher (bootstrap install; not in protected clone)",
+        "- /hframe",
+        "- /hframe/***",
     ]
     for g in DEFAULT_DENY_GLOBS:
         lines.extend(_deny_to_rsync_rules(g))

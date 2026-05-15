@@ -3,7 +3,7 @@ from __future__ import annotations
 from hframe.operations import default_policy_template
 
 
-def test_default_policy_allowlist_preserves_devcontainer_metadata() -> None:
+def test_default_policy_template_is_denylist_only_fallback() -> None:
     text = default_policy_template()
-    assert ".devcontainer/**" in text
-    assert ".devcontainer.json" in text
+    assert "hframe-policy: mode denylist-only" in text
+    assert "fallback" in text.lower()

@@ -33,7 +33,7 @@ Instead:
 
 * Agents operate only on disposable workspace copies.
 * Workspace copies have **all git remotes removed** before agent use.
-* Synchronization is mediated through **operator-controlled policy** (allowlist by default; optional user denylist; optional denylist-only mode) plus **built-in deny globs**.
+* Synchronization is mediated through **operator-controlled policy** (**allowlist** paths at bootstrap: non-ignored repo-root entries; **`.hframe/policy.denylist`** from root **`.gitignore`**; optional **denylist-only** mode) plus **built-in deny globs**.
 * Only **sanitized filesystem deltas** propagate back to the protected repo (per policy).
 * **Only the protected repo** may push to the remote (`./hframe out` performs push from the protected tree).
 
@@ -168,8 +168,8 @@ Local directory **`<slug>_workspace_repo/`**:
 
 Sibling of the two repos under the same parent:
 
-* **`policy.allowlist`** — default **allowlist** patterns (one per line; `#` comments).
-* **`policy.denylist`** — optional **extra deny** globs (merged after built-in denies in allowlist mode).
+* **`policy.allowlist`** — default from bootstrap: **allowlist** path lines, one per **non-ignored** top-level entry in the protected clone (see `git check-ignore` in implementation), unless none qualify (then **denylist-only** fallback). Operators may replace or edit freely.
+* **`policy.denylist`** — extra deny globs merged **after** built-in denies. On a fresh bootstrap (when this file did not exist beforehand), it is **seeded from the protected clone’s root `.gitignore`** (pattern lines only; `!` negation lines are omitted). Operators may edit freely afterward.
 * **`hframe-membrane.pyz`** — source zipapp built at bootstrap; embeds **paths relative to the bootstrap parent** (plus runtime resolution so the same bundle can run in Dev Containers when the parent is bind-mounted).
 * Optional templates / docs as shipped by bootstrap.
 
@@ -228,7 +228,7 @@ High-level steps performed by **`hframe-bootstrap`** (see [README.md](README.md)
 1. **Clone** the URL into **`<slug>_repo/`** (protected).
 2. **Copy** tree to **`<slug>_workspace_repo/`** (workspace).
 3. **Remove all remotes** from the workspace; assert workspace has no remotes.
-4. Ensure **`.hframe/policy.allowlist`** (and denylist template / policy files as implemented).
+4. Ensure **`.hframe/policy.allowlist`** and **`.hframe/policy.denylist`**: after the protected clone exists, bootstrap writes defaults when those files were absent (allowlist from non-ignored root paths, or denylist-only if none; denylist from **`<slug>_repo/.gitignore`**).
 5. **Build** `.hframe/hframe-membrane.pyz` (source zipapp with `hframe` `.py` under `.hframe/`; not shipped inside the workspace git tree).
 6. **Install** the **`./hframe`** workspace launcher (POSIX: portable `python3` script; Windows: prebuilt `hframe-shim-*.exe`).
 7. **Write** a minimal **`.devcontainer/devcontainer.json`** into the workspace when none exists (Dev Container bind mounts for `./hframe`; see README).
@@ -238,20 +238,22 @@ High-level steps performed by **`hframe-bootstrap`** (see [README.md](README.md)
 
 ## Policy model
 
-### Allowlist mode (default)
+### Allowlist mode (default from `hframe-bootstrap`)
 
-* Patterns live in **`.hframe/policy.allowlist`** (repo-root-relative globs/paths; see README for directive syntax).
-* **Optional** **`.hframe/policy.denylist`** — user globs merged **after** built-in denies and **before** allow rules, so operators can carve out subtrees (e.g. deny `src/generated/**` under an allowed `src/**`).
+* **Path lines** in **`.hframe/policy.allowlist`** (repo-root-relative globs/paths; see README for directive syntax). Bootstrap seeds one line per **top-level** clone path that Git does not ignore (directories as `name/**`, files as `name`), using **`git check-ignore`** so nested ignore rules apply.
+* **Optional** **`.hframe/policy.denylist`** — user globs merged **after** built-in denies and **before** allow rules. Bootstrap seeds this from the protected clone’s **root `.gitignore`** (pattern lines only; `!` negation omitted).
+* **`./hframe out`** uses path-limited `git add` for tracked paths implied by the allowlist.
+* Operators may replace bootstrap-generated lines with a hand-maintained list (see README).
 
-### Denylist-only mode
+### Denylist-only mode (fallback or operator-selected)
 
-* Selected by a directive line in `policy.allowlist` (see README): **`# hframe-policy: mode denylist-only`**, with **no** non-comment path lines in that file.
-* Rsync includes the **whole tree** except built-in denies and user deny globs.
-* **`./hframe out`** stages changes on the protected repo with **`git add -A`** (broader than allowlist mode)—operators must accept that tradeoff consciously.
+* Selected by **`# hframe-policy: mode denylist-only`** in `policy.allowlist` with **no** other path lines. Bootstrap uses this only when **no** non-ignored root paths were found for an allowlist.
+* Rsync includes the **whole tree** except built-in denies, the repo-root **`./hframe`** launcher (never mirrored between repos), and user deny globs from **`.hframe/policy.denylist`**.
+* **`./hframe out`** stages with **`git add -A`** (broader than allowlist mode).
 
 ### Built-in deny globs (always on)
 
-Authoritative list in source: `hframe.filters.DEFAULT_DENY_GLOBS` (as of this PRD revision):
+Authoritative list in source: `hframe.filters.DEFAULT_DENY_GLOBS` (as of this PRD revision), **plus** anchored rsync excludes for **`.git/`** and the repo-root **`hframe`** launcher (see `hframe.filters.build_rsync_filter_lines` / `build_rsync_deny_only_lines`):
 
 ```text
 .pinion/**
@@ -264,7 +266,9 @@ tmp/**
 
 (Additional built-in patterns may be added in minor releases; release notes should call out material changes.)
 
-### Example allowlist body
+### Example allowlist body (opt-in)
+
+When using **allowlist** mode, paths might include:
 
 ```text
 .devcontainer/**

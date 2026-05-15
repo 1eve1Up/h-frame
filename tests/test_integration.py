@@ -15,6 +15,7 @@ from hframe.membrane_bootstrap import (
     membrane_directory_names,
 )
 from hframe.operations import verify
+from hframe.sync_policy import PolicyMode, load_sync_policy, validate_sync_policy
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> None:
@@ -41,6 +42,10 @@ def _make_upstream_bare(tmp: Path) -> Path:
     (upstream / "src").mkdir()
     (upstream / "src" / "hello.txt").write_text("v0\n", encoding="utf-8")
     (upstream / "README.md").write_text("readme\n", encoding="utf-8")
+    (upstream / ".gitignore").write_text(
+        "# build artifacts\n" "dist/\n" "node_modules/\n" "!ignored_but_negated/**\n",
+        encoding="utf-8",
+    )
     _git(upstream, "add", ".")
     _git(upstream, "commit", "-m", "init")
     bare = tmp / "upstream.git"
@@ -76,6 +81,19 @@ def test_membrane_bootstrap_and_embedded_bridge(tmp_path: Path) -> None:
     assert list_remotes(workspace) == []
     assert "origin" in list_remotes(original)
     assert "H-Frame Sync Rules" in (workspace / "AGENTS.md").read_text(encoding="utf-8")
+
+    policy_allow = tmp_path / ".hframe" / "policy.allowlist"
+    policy_deny = tmp_path / ".hframe" / "policy.denylist"
+    pol = load_sync_policy(policy_allow)
+    validate_sync_policy(pol)
+    assert pol.mode == PolicyMode.ALLOWLIST
+    deny_text = policy_deny.read_text(encoding="utf-8")
+    assert "dist/" in deny_text
+    assert "node_modules/" in deny_text
+    assert "!ignored_but_negated" not in deny_text
+    assert pol.user_deny_patterns == ("dist/", "node_modules/")
+    assert "src/**" in pol.allow_patterns
+    assert "README.md" in pol.allow_patterns
 
     dc = workspace / ".devcontainer" / "devcontainer.json"
     assert dc.is_file()

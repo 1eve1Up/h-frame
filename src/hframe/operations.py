@@ -32,22 +32,14 @@ from hframe.sync_policy import (
 
 
 def default_policy_template() -> str:
+    """Fallback ``policy.allowlist`` when bootstrap finds no non-ignored root paths (edge case)."""
     return (
-        "# Default: allowlist mode. Optional user deny globs: .hframe/policy.denylist\n"
-        "# Switch to denylist-only (sync everything except built-in + user denies):\n"
-        "# # hframe-policy: mode denylist-only\n"
+        "# Denylist-only (fallback): no non-ignored root entries were found for an allowlist.\n"
+        "# Sync the full tree except built-in denies (see hframe.filters.DEFAULT_DENY_GLOBS)\n"
+        "# and .hframe/policy.denylist (seeded from root .gitignore when that file was created).\n"
+        "# Replace this file with explicit path lines to use allowlist mode (see README).\n"
+        "# hframe-policy: mode denylist-only\n"
         "\n"
-        "# Allowlist: paths relative to repo root (see H-Frame PRD).\n"
-        "# VS Code / devcontainers: keep so ``./hframe in`` (rsync --delete) does not strip them.\n"
-        ".devcontainer/**\n"
-        ".devcontainer.json\n"
-        "src/**\n"
-        "tests/**\n"
-        "docs/**\n"
-        "pyproject.toml\n"
-        "package.json\n"
-        "Dockerfile\n"
-        "README.md\n"
     )
 
 

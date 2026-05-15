@@ -487,7 +487,7 @@ Inside the workspace:
 
 Refresh workspace from canonical repo.
 
-**Allowlist + `rsync --delete`:** only paths in `../.hframe/policy.allowlist` are refreshed from the protected clone; other paths can be **removed** from the workspace on `in`. The default template includes **`.devcontainer/**`** and **`.devcontainer.json`** so devcontainer metadata is not stripped (without that, “Reopen in Container” fails after sync). Edit the host policy file to add any other paths your workspace must keep (for example `.github/workflows/`).
+**Policy + `rsync --delete`:** behavior is defined by `../.hframe/policy.allowlist` (see [PRD.md](PRD.md) policy model). **`hframe-bootstrap`** seeds **allowlist** mode by default: **one pattern per repo-root path** that Git does not ignore (via `git check-ignore`), directories as `name/**` and files by basename. **`.hframe/policy.denylist`** is still filled from the protected clone’s root **`.gitignore`** (minus `!` lines) and is merged **after** built-in denies, so ignored subtrees stay out of the sync surface. **`.git/`** and the repo-root **`./hframe`** launcher are never mirrored. If no root paths qualify (edge case), bootstrap writes **denylist-only** instead. For a full-tree sync except denies, replace `policy.allowlist` with the denylist-only directive (README).
 
 The membrane zipapp path is fixed relative to the workspace (see **Devcontainers** above).
 
@@ -497,7 +497,7 @@ The membrane zipapp path is fixed relative to the workspace (see **Devcontainers
 ./hframe out
 ```
 
-Export allowlisted but not denylisted changes back upstream.
+Export policy-permitted changes back upstream (path-limited `git add` in allowlist mode, or `git add -A` in denylist-only mode).
 
 ---
 
