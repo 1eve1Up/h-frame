@@ -217,7 +217,7 @@ The goal is:
 
 # Release and stability
 
-**Version:** `2026.5.0` (preview line `v2026.5.0`; see `RELEASES.md`)
+**Version:** `2026.5.1` (preview line `v2026.5.1`; see `RELEASES.md`)
 **Stability:** early public preview
 **Topology status:** evolving
 **Production claim:** suitable for controlled agent workflows and experimentation; not a replacement for broader SDLC governance.
