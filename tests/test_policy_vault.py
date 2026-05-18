@@ -7,7 +7,9 @@ import pytest
 cryptography = pytest.importorskip("cryptography")
 
 from hframe.policy_vault import (  # noqa: E402
+    bootstrap_debug_enabled,
     decrypt_policy_blob,
+    emit_vault_key_debug,
     encrypt_policy_plaintext,
     generate_vault_key,
     key_from_b64,
@@ -41,6 +43,29 @@ def test_corrupt_blob_fails() -> None:
 def test_key_b64_round_trip() -> None:
     key = generate_vault_key()
     assert key_from_b64(key_to_b64(key)) == key
+
+
+def test_emit_vault_key_debug_prints_when_env_set(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    key = generate_vault_key()
+    monkeypatch.delenv("HFRAME_BOOTSTRAP_DEBUG", raising=False)
+    emit_vault_key_debug(key)
+    assert capsys.readouterr().out == ""
+    monkeypatch.setenv("HFRAME_BOOTSTRAP_DEBUG", "1")
+    assert bootstrap_debug_enabled()
+    emit_vault_key_debug(key)
+    out = capsys.readouterr().out
+    assert out.startswith("hframe-bootstrap: vault key (debug): ")
+    assert key_to_b64(key) in out
+
+
+def test_emit_vault_key_debug_silent_for_other_env_values(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("HFRAME_BOOTSTRAP_DEBUG", "true")
+    emit_vault_key_debug(generate_vault_key())
+    assert capsys.readouterr().out == ""
 
 
 def test_write_read_vault_file(tmp_path: Path) -> None:

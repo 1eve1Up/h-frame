@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import base64
+import os
 import secrets
+import sys
 from pathlib import Path
+
+BOOTSTRAP_DEBUG_ENV = "HFRAME_BOOTSTRAP_DEBUG"
 
 VAULT_MAGIC = "HFV1"
 ALLOW_VAULT_NAME = "policy.allowlist.vault"
@@ -29,6 +33,18 @@ def generate_vault_key() -> bytes:
 
 def key_to_b64(key: bytes) -> str:
     return base64.urlsafe_b64encode(key).decode("ascii")
+
+
+def bootstrap_debug_enabled() -> bool:
+    return os.environ.get(BOOTSTRAP_DEBUG_ENV) == "1"
+
+
+def emit_vault_key_debug(key: bytes) -> None:
+    """Print the vault key to stdout when ``HFRAME_BOOTSTRAP_DEBUG=1`` (operator recovery)."""
+    if not bootstrap_debug_enabled():
+        return
+    sys.stdout.write(f"hframe-bootstrap: vault key (debug): {key_to_b64(key)}\n")
+    sys.stdout.flush()
 
 
 def key_from_b64(token: str) -> bytes:

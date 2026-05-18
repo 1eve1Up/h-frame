@@ -18,7 +18,12 @@ from hframe.gitignore_policy import (
 )
 from hframe.operations import default_policy_template
 from hframe.policy_fs import harden_hframe_bundle
-from hframe.policy_vault import generate_vault_key, key_to_b64, seal_policy_files
+from hframe.policy_vault import (
+    emit_vault_key_debug,
+    generate_vault_key,
+    key_to_b64,
+    seal_policy_files,
+)
 from hframe.shim_install import install_workspace_shim
 
 POLICY_REL = Path(".hframe") / "policy.allowlist"
@@ -172,6 +177,7 @@ def bootstrap_membrane(
     policy_paths: list[Path] = []
     if use_vault:
         vault_key = generate_vault_key()
+        emit_vault_key_debug(vault_key)
         allow_vault, deny_vault = seal_policy_files(
             hframe_dir,
             allow_plain=policy,
