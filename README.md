@@ -495,20 +495,27 @@ Refresh workspace from canonical repo.
 
 Use this when the layout already exists and you need to edit allow/deny patterns without running `hframe-bootstrap` on a fresh parent.
 
-**Requirements**
+**Setup (do this once per shell)**
 
-* `pip install 'hframe[vault]'` (or `pip install -e '.[dev]'` from a clone).
-* Work on the **host** bootstrap parent (the directory that contains `<slug>_repo/`, `<slug>_workspace_repo/`, and `.hframe/`). Policy files are `0444` on POSIX—`chmod u+w` on the vault blobs if needed.
-* In a Dev Container, the `.hframe` bind mount is **read-only**; edit from the host or temporarily remove `readonly` from that mount.
+The snippets below use a Python environment where `hframe` is installed (they are not plain-stdlib one-liners):
+
+```bash
+cd /path/to/bootstrap-parent    # directory that contains .hframe/, *_repo/, *_workspace_repo/
+python3 -m venv .venv             # optional; skip if you already use a venv
+source .venv/bin/activate         # Windows: .venv\Scripts\activate
+pip install 'hframe[vault]'
+export PARENT="$(pwd)"
+```
+
+Set `PARENT` and `KEY_B64` before each block. If you omit `PARENT`, paths like `Path("$PARENT")` will be wrong. In a Dev Container, edit from the **host** (the `.hframe` mount is **read-only** inside the container).
 
 **1. Recover the vault key**
 
 The key is a 32-byte secret, stored url-safe base64 as `key_b64` inside `hframe-membrane.pyz` (not in the workspace git tree).
 
-From the zipapp (replace `PARENT` with your bootstrap parent):
+From the zipapp (`$PARENT` must already be set—see **Setup**):
 
 ```bash
-export PARENT=/path/to/bootstrap-parent
 python3 -c "
 import re, zipfile
 from pathlib import Path
@@ -529,7 +536,6 @@ HFRAME_BOOTSTRAP_DEBUG=1 hframe-bootstrap --vault '<git-url>'
 **2. Decrypt to plaintext (inspect or edit)**
 
 ```bash
-export PARENT=/path/to/bootstrap-parent
 export KEY_B64='paste-token-here'
 python3 <<PY
 from pathlib import Path
@@ -549,16 +555,19 @@ Edit `policy.allowlist.edit` and `policy.denylist.edit` with a normal text edito
 
 **3. Re-encrypt (re-seal) with the same key**
 
+Bootstrap sets `policy.*.vault` to **read-only** (`0444`). You must make them writable before overwriting (the script below uses `permit_policy_vault_rewrite`; or run `chmod u+w .hframe/policy.*.vault`).
+
 After editing, write the vault blobs back and remove the temporary edit files:
 
 ```bash
 python3 <<PY
 from pathlib import Path
 from hframe.policy_vault import key_from_b64, write_vault_file
-from hframe.policy_fs import harden_hframe_bundle
+from hframe.policy_fs import harden_hframe_bundle, permit_policy_vault_rewrite
 
 hf = Path("$PARENT") / ".hframe"
 key = key_from_b64("$KEY_B64")
+permit_policy_vault_rewrite(hf)
 allow = (hf / "policy.allowlist.edit").read_text(encoding="utf-8")
 deny = (hf / "policy.denylist.edit").read_text(encoding="utf-8")
 write_vault_file(hf / "policy.allowlist.vault", allow, key)
@@ -584,6 +593,7 @@ python3 <<PY
 import json, zipfile
 from pathlib import Path
 from hframe.build_membrane_pyz import build_membrane_pyz
+from hframe.policy_fs import permit_policy_vault_rewrite
 from hframe.policy_vault import generate_vault_key, key_to_b64, write_vault_file
 
 parent = Path("$PARENT")
@@ -597,6 +607,7 @@ while src[end] != quote:
     end += 1
 cfg = json.loads(src[start + 1 : end])
 new_key = generate_vault_key()
+permit_policy_vault_rewrite(hf)
 allow = (hf / "policy.allowlist.edit").read_text(encoding="utf-8")
 deny = (hf / "policy.denylist.edit").read_text(encoding="utf-8")
 write_vault_file(hf / "policy.allowlist.vault", allow, new_key)

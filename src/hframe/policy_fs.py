@@ -11,6 +11,10 @@ MODE_HFRAME_DIR = (
     stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP
 )
 MODE_POLICY_FILE = stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH
+# Owner-writable for operator re-seal; harden_hframe_bundle restores MODE_POLICY_FILE.
+MODE_POLICY_FILE_OPERATOR_WRITE = (
+    stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
+)
 
 
 def _chmod(path: Path, mode: int) -> None:
@@ -18,6 +22,22 @@ def _chmod(path: Path, mode: int) -> None:
         os.chmod(path, mode)
     except OSError:
         pass
+
+
+def permit_policy_vault_rewrite(hframe_dir: Path) -> None:
+    """
+    Allow the operator to overwrite ``*.vault`` blobs (bootstrap sets ``0444``).
+
+    Call before ``write_vault_file`` during manual re-seal; follow with
+    ``harden_hframe_bundle`` to restore read-only policy artifacts.
+    """
+    if sys.platform == "win32":
+        return
+    hf = hframe_dir.resolve()
+    for name in ("policy.allowlist.vault", "policy.denylist.vault"):
+        p = hf / name
+        if p.is_file():
+            _chmod(p, MODE_POLICY_FILE_OPERATOR_WRITE)
 
 
 def harden_hframe_bundle(hframe_dir: Path, *, policy_paths: list[Path]) -> None:
