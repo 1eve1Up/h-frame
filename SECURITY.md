@@ -40,7 +40,7 @@ Runs as the invoking user and may:
 - **POSIX:** bootstrap writes a short **`#!/usr/bin/env python3`** workspace script that `execvp`'s `python3` on the membrane zipapp (portable across Linux and macOS, including devcontainers).
 - **Windows:** copy a **prebuilt** `hframe-shim-*.exe` from package data (no compiler path).
 
-Policy files **must** remain under operator control; agents should not be able to rewrite `.hframe/` if you follow PRD placement guidance (README policy section).
+Policy files **must** remain under operator control. New bootstraps harden `.hframe/` with read-only policy modes (POSIX) and a **read-only** Dev Container bind mount for `../.hframe`; agents should not rewrite policy inside the container. Optional `hframe-bootstrap --vault` stores encrypted policy on disk with the decryption key embedded only in `hframe-membrane.pyz`—this deters casual edits but does **not** resist a hostile agent with the same UID who can read the zipapp. Git “dubious ownership” is handled by membrane `safe.directory`, not by editing allowlists.
 
 ### Agent workspace (`./hframe`)
 

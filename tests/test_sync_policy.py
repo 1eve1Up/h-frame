@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
+from hframe.config import HFrameConfig, PolicyVaultConfig
+from hframe.policy_vault import write_vault_file
 from hframe.sync_policy import (
     PolicyMode,
     SyncPolicy,
     load_sync_policy,
+    load_sync_policy_for_config,
     parse_allowlist_with_mode,
     validate_sync_policy,
 )
@@ -52,3 +57,20 @@ def test_validate_allowlist_requires_patterns() -> None:
     pol = SyncPolicy(PolicyMode.ALLOWLIST, (), ())
     with pytest.raises(ValueError, match="allowlist mode"):
         validate_sync_policy(pol)
+
+
+def test_load_sync_policy_for_config_vault(tmp_path: Path) -> None:
+    pytest.importorskip("cryptography")
+    key = b"k" * 32
+    allow_v = tmp_path / "policy.allowlist.vault"
+    deny_v = tmp_path / "policy.denylist.vault"
+    write_vault_file(allow_v, "src/**\n", key)
+    write_vault_file(deny_v, "scratch/**\n", key)
+    cfg = HFrameConfig(
+        original=tmp_path / "o",
+        workspace=tmp_path / "w",
+        policy_vault=PolicyVaultConfig(allow=allow_v, deny=deny_v, key=key),
+    )
+    pol = load_sync_policy_for_config(cfg)
+    assert pol.allow_patterns == ("src/**",)
+    assert pol.user_deny_patterns == ("scratch/**",)

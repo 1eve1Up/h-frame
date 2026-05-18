@@ -168,12 +168,14 @@ Local directory **`<slug>_workspace_repo/`**:
 
 Sibling of the two repos under the same parent:
 
-* **`policy.allowlist`** — default from bootstrap: **allowlist** path lines, one per **non-ignored** top-level entry in the protected clone (see `git check-ignore` in implementation), unless none qualify (then **denylist-only** fallback). Operators may replace or edit freely.
-* **`policy.denylist`** — extra deny globs merged **after** built-in denies. On a fresh bootstrap (when this file did not exist beforehand), it is **seeded from the protected clone’s root `.gitignore`** (pattern lines only; `!` negation lines are omitted). Operators may edit freely afterward.
+* **`policy.allowlist`** — default from bootstrap: **allowlist** path lines, one per **non-ignored** top-level entry in the protected clone (see `git check-ignore` in implementation), unless none qualify (then **denylist-only** fallback). Operators may replace or edit on the **host** (not from agent prompts).
+* **`policy.denylist`** — extra deny globs merged **after** built-in denies. On a fresh bootstrap (when this file did not exist beforehand), it is **seeded from the protected clone’s root `.gitignore`** (pattern lines only; `!` negation lines are omitted).
+* **`policy.allowlist.vault` / `policy.denylist.vault`** — when bootstrap uses **`--vault`**, plaintext policy files are removed after encryption; decryption key is embedded only in the zipapp (optional `hframe[vault]` dependency).
 * **`hframe-membrane.pyz`** — source zipapp built at bootstrap; embeds **paths relative to the bootstrap parent** (plus runtime resolution so the same bundle can run in Dev Containers when the parent is bind-mounted).
+* **POSIX modes:** bootstrap sets policy artifacts to `0444` and `.hframe/` to `0755` where supported.
 * Optional templates / docs as shipped by bootstrap.
 
-**Critical requirement:** policy files **MUST** remain under operator control—typically **outside** the agent-only writable tree (same parent as repos; agents confined to `<slug>_workspace_repo/`). Do not place authoritative policy only inside paths the agent owns unconditionally.
+**Critical requirement:** policy files **MUST** remain under operator control—typically **outside** the agent-only writable tree (same parent as repos; agents confined to `<slug>_workspace_repo/`). Generated devcontainers bind-mount `.hframe` **read-only**; do not place authoritative policy only inside paths the agent owns unconditionally.
 
 ---
 
@@ -182,11 +184,12 @@ Sibling of the two repos under the same parent:
 ### Operator surface: `hframe-bootstrap`
 
 ```bash
-hframe-bootstrap '<git_url>'
+hframe-bootstrap [--vault] '<git_url>'
 ```
 
 * **Exactly one argument:** the git URL to clone.
-* No flags required for the standard agent workflow.
+* **`--vault` (optional):** encrypt policy on disk; key embedded only in the membrane zipapp (`pip install 'hframe[vault]'`).
+* No other flags on the operator surface for the standard agent workflow.
 * Creates `<slug>_repo/`, `<slug>_workspace_repo/`, seeds `.hframe/` policy templates, builds the zipapp, installs **`./hframe`** into the workspace, and appends **AGENTS.md** sync rules.
 
 ### Agent surface: `./hframe`

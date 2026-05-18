@@ -26,7 +26,7 @@ from hframe.rsync_util import rsync_filtered
 from hframe.sync_policy import (
     PolicyMode,
     SyncPolicy,
-    load_sync_policy,
+    load_sync_policy_for_config,
     validate_sync_policy,
 )
 
@@ -67,7 +67,7 @@ def sync_in(cfg: HFrameConfig) -> dict:
     """Pull upstream in protected repo, then rsync allowlisted paths into workspace."""
     cfg.validate()
     assert_no_remotes(cfg.workspace)
-    sync_policy = load_sync_policy(cfg.policy)
+    sync_policy = load_sync_policy_for_config(cfg)
     validate_sync_policy(sync_policy)
     git_pull(cfg.original)
     deny_only = sync_policy.mode == PolicyMode.DENYLIST_ONLY
@@ -79,14 +79,14 @@ def sync_in(cfg: HFrameConfig) -> dict:
         user_deny_patterns=list(sync_policy.user_deny_patterns) or None,
         delete=True,
     )
-    return _receipt("in", cfg.policy, sync_policy)
+    return _receipt("in", cfg, sync_policy)
 
 
 def sync_out(cfg: HFrameConfig) -> dict:
     """Rsync allowlisted paths workspace → original, then stage those paths in original."""
     cfg.validate()
     assert_no_remotes(cfg.workspace)
-    sync_policy = load_sync_policy(cfg.policy)
+    sync_policy = load_sync_policy_for_config(cfg)
     validate_sync_policy(sync_policy)
     deny_only = sync_policy.mode == PolicyMode.DENYLIST_ONLY
     rsync_filtered(
@@ -103,7 +103,7 @@ def sync_out(cfg: HFrameConfig) -> dict:
         git_add_paths(
             cfg.original, allowlist_pathspecs(list(sync_policy.allow_patterns))
         )
-    return _receipt("out", cfg.policy, sync_policy)
+    return _receipt("out", cfg, sync_policy)
 
 
 def sync_out_and_push(cfg: HFrameConfig, *, remote: str = "origin") -> dict:
@@ -145,11 +145,13 @@ def verify(cfg: HFrameConfig) -> None:
         )
 
 
-def _receipt(direction: str, policy: Path, sync_policy: SyncPolicy) -> dict:
+def _receipt(direction: str, cfg: HFrameConfig, sync_policy: SyncPolicy) -> dict:
+    storage = "vault" if cfg.policy_vault is not None else "plaintext"
     return {
         "sync_id": f"sync-{int(time.time())}",
         "direction": direction,
-        "policy": str(policy),
+        "policy": str(cfg.policy_reference_path()),
+        "policy_storage": storage,
         "policy_mode": sync_policy.mode.value,
         "allow_rules": len(sync_policy.allow_patterns),
         "user_deny_rules": len(sync_policy.user_deny_patterns),

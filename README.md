@@ -442,7 +442,7 @@ Many devcontainers mount **only** the workspace git repository, so `../.hframe/`
 ```json
 "mounts": [
   "source=${localWorkspaceFolder}/..,target=/workspaces/hframe-root,type=bind,consistency=cached",
-  "source=${localWorkspaceFolder}/../.hframe,target=/workspaces/.hframe,type=bind,consistency=cached"
+  "source=${localWorkspaceFolder}/../.hframe,target=/workspaces/.hframe,type=bind,consistency=cached,readonly"
 ]
 ```
 
@@ -487,7 +487,11 @@ Inside the workspace:
 
 Refresh workspace from canonical repo.
 
-**Policy + `rsync --delete`:** behavior is defined by `../.hframe/policy.allowlist` (see [PRD.md](PRD.md) policy model). **`hframe-bootstrap`** seeds **allowlist** mode by default: **one pattern per repo-root path** that Git does not ignore (via `git check-ignore`), directories as `name/**` and files by basename. **`.hframe/policy.denylist`** is still filled from the protected clone’s root **`.gitignore`** (minus `!` lines) and is merged **after** built-in denies, so ignored subtrees stay out of the sync surface. **`.git/`** and the repo-root **`./hframe`** launcher are never mirrored. If no root paths qualify (edge case), bootstrap writes **denylist-only** instead. For a full-tree sync except denies, replace `policy.allowlist` with the denylist-only directive (README).
+**Policy tamper resistance:** `.hframe/` lives on the bootstrap parent, not in the workspace git tree. Bootstrap sets policy files to **read-only** (`0444` on POSIX). Generated devcontainers mount `../.hframe` **read-only** so agents cannot rewrite allow/deny lists inside the container. Edit policy on the **host** (or temporarily drop the readonly mount)—not via agent prompts. **Git dubious ownership** in containers is handled by the membrane (`safe.directory` per repo); do not widen the allowlist or switch to denylist-only to “fix” git errors.
+
+**Vault mode (optional):** `pip install 'hframe[vault]'` then `hframe-bootstrap --vault <git-url>` encrypts policy on disk (`policy.allowlist.vault`, `policy.denylist.vault`); the one-time key is embedded only in `hframe-membrane.pyz`. Changing policy later requires host-side re-bootstrap or manual re-seal (see [RELEASES.md](RELEASES.md)).
+
+**Policy + `rsync --delete`:** behavior is defined by `../.hframe/policy.allowlist` (or vault blobs when `--vault` was used; see [PRD.md](PRD.md) policy model). **`hframe-bootstrap`** seeds **allowlist** mode by default: **one pattern per repo-root path** that Git does not ignore (via `git check-ignore`), directories as `name/**` and files by basename. **`.hframe/policy.denylist`** is still filled from the protected clone’s root **`.gitignore`** (minus `!` lines) and is merged **after** built-in denies, so ignored subtrees stay out of the sync surface. **`.git/`** and the repo-root **`./hframe`** launcher are never mirrored. If no root paths qualify (edge case), bootstrap writes **denylist-only** instead. For a full-tree sync except denies, replace `policy.allowlist` with the denylist-only directive (README).
 
 The membrane zipapp path is fixed relative to the workspace (see **Devcontainers** above).
 

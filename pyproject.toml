@@ -13,9 +13,13 @@ authors = [{ name = "Pinionize" }]
 dependencies = []
 
 [project.optional-dependencies]
+vault = [
+  "cryptography>=42.0",
+]
 dev = [
   "pytest>=8.0",
   "ruff>=0.4.0",
+  "cryptography>=42.0",
 ]
 
 [project.scripts]

@@ -1,4 +1,4 @@
-"""Operator entrypoint: ``hframe-bootstrap <git_url>`` (single argument)."""
+"""Operator entrypoint: ``hframe-bootstrap [--vault] <git_url>``."""
 
 from __future__ import annotations
 
@@ -20,9 +20,26 @@ def main(argv: list[str] | None = None) -> int:
         "git_url",
         help="Git remote URL to clone; directory names are derived from the repository basename.",
     )
+    parser.add_argument(
+        "--vault",
+        action="store_true",
+        help=(
+            "Encrypt policy.allowlist and policy.denylist on disk; embed a one-time key "
+            "only in hframe-membrane.pyz (requires: pip install 'hframe[vault]')."
+        ),
+    )
     args = parser.parse_args(argv)
+    if args.vault:
+        try:
+            import cryptography  # noqa: F401
+        except ImportError:
+            sys.stderr.write(
+                "hframe-bootstrap: --vault requires cryptography; "
+                "install with: pip install 'hframe[vault]'\n"
+            )
+            return 1
     try:
-        bootstrap_membrane(args.git_url, Path.cwd())
+        bootstrap_membrane(args.git_url, Path.cwd(), use_vault=args.vault)
     except Exception as e:
         sys.stderr.write(f"hframe-bootstrap: {e}\n")
         return 1

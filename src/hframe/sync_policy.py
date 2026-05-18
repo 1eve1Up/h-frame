@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
+from hframe.config import HFrameConfig
 from hframe.filters import parse_allowlist_file
 
 # Only a top-level ``# hframe-policy: …`` line sets mode (not ``# # …`` documentation).
@@ -61,12 +62,39 @@ def _coerce_mode(token: str) -> PolicyMode:
 
 def load_sync_policy(policy_allowlist_path: Path) -> SyncPolicy:
     text = policy_allowlist_path.read_text(encoding="utf-8")
-    mode, allows = parse_allowlist_with_mode(text)
-    deny_path = policy_allowlist_path.parent / "policy.denylist"
+    return _sync_policy_from_text(
+        text, policy_allowlist_path.parent / "policy.denylist"
+    )
+
+
+def _sync_policy_from_text(allow_text: str, deny_path: Path) -> SyncPolicy:
+    mode, allows = parse_allowlist_with_mode(allow_text)
     denies: list[str] = []
     if deny_path.is_file():
         denies = parse_allowlist_file(deny_path.read_text(encoding="utf-8"))
     return SyncPolicy(mode, tuple(allows), tuple(denies))
+
+
+def _sync_policy_from_vault_text(allow_text: str, deny_text: str | None) -> SyncPolicy:
+    mode, allows = parse_allowlist_with_mode(allow_text)
+    denies: list[str] = []
+    if deny_text:
+        denies = parse_allowlist_file(deny_text)
+    return SyncPolicy(mode, tuple(allows), tuple(denies))
+
+
+def load_sync_policy_for_config(cfg: HFrameConfig) -> SyncPolicy:
+    if cfg.policy_vault is not None:
+        from hframe.policy_vault import read_vault_file
+
+        vault = cfg.policy_vault
+        allow_text = read_vault_file(vault.allow, vault.key)
+        deny_text: str | None = None
+        if vault.deny.is_file():
+            deny_text = read_vault_file(vault.deny, vault.key)
+        return _sync_policy_from_vault_text(allow_text, deny_text)
+    assert cfg.policy is not None
+    return load_sync_policy(cfg.policy)
 
 
 def validate_sync_policy(p: SyncPolicy) -> None:

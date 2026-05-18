@@ -6,8 +6,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from hframe.config import HFrameConfig
+from hframe.config import HFrameConfig, PolicyVaultConfig
 from hframe.operations import sync_in, sync_out_and_push
+from hframe.policy_vault import key_from_b64
 
 # When the zipapp is only bind-mounted at ``/workspaces/.hframe``, ``sys.argv[0]`` resolves
 # under ``/workspaces/.hframe/`` and ``Path.parent.parent`` is ``/workspaces``, not the
@@ -59,23 +60,57 @@ def _resolve_bootstrap_root(pyz: Path, original_rel: Path) -> Path:
     return pyz.parent.parent.resolve()
 
 
+def _policy_vault_from_embedded(
+    root: Path, vault_cfg: dict[str, Any]
+) -> PolicyVaultConfig:
+    for key in ("allow_rel", "deny_rel", "key_b64"):
+        if key not in vault_cfg:
+            raise KeyError(key)
+    return PolicyVaultConfig(
+        allow=(root / str(vault_cfg["allow_rel"])).resolve(),
+        deny=(root / str(vault_cfg["deny_rel"])).resolve(),
+        key=key_from_b64(str(vault_cfg["key_b64"])),
+    )
+
+
 def _cfg_from_embedded_relative(cfg: dict[str, Any], *, pyz: Path) -> HFrameConfig:
-    for key in ("original_rel", "workspace_rel", "policy_rel"):
+    for key in ("original_rel", "workspace_rel"):
         if key not in cfg:
             raise KeyError(key)
     root = _resolve_bootstrap_root(pyz, Path(cfg["original_rel"]))
     original = (root / cfg["original_rel"]).resolve()
     workspace = (root / cfg["workspace_rel"]).resolve()
+    if "policy_vault" in cfg:
+        vault = _policy_vault_from_embedded(root, cfg["policy_vault"])
+        return HFrameConfig(original=original, workspace=workspace, policy_vault=vault)
+    if "policy_rel" not in cfg:
+        raise KeyError("policy_rel")
     policy = (root / cfg["policy_rel"]).resolve()
     return HFrameConfig(original=original, workspace=workspace, policy=policy)
 
 
 def _cfg_from_embedded_absolute(cfg: dict[str, Any]) -> HFrameConfig:
-    for key in ("original", "workspace", "policy"):
+    for key in ("original", "workspace"):
         if key not in cfg:
             raise KeyError(key)
     original = Path(str(cfg["original"])).resolve()
     workspace = Path(str(cfg["workspace"])).resolve()
+    if "policy_vault" in cfg:
+        vault_cfg = cfg["policy_vault"]
+        for key in ("allow", "deny", "key_b64"):
+            if key not in vault_cfg:
+                raise KeyError(key)
+        return HFrameConfig(
+            original=original,
+            workspace=workspace,
+            policy_vault=PolicyVaultConfig(
+                allow=Path(str(vault_cfg["allow"])).resolve(),
+                deny=Path(str(vault_cfg["deny"])).resolve(),
+                key=key_from_b64(str(vault_cfg["key_b64"])),
+            ),
+        )
+    if "policy" not in cfg:
+        raise KeyError("policy")
     policy = Path(str(cfg["policy"])).resolve()
     return HFrameConfig(original=original, workspace=workspace, policy=policy)
 

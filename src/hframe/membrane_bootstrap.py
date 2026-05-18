@@ -17,6 +17,8 @@ from hframe.gitignore_policy import (
     root_allow_patterns_from_protected_repo,
 )
 from hframe.operations import default_policy_template
+from hframe.policy_fs import harden_hframe_bundle
+from hframe.policy_vault import generate_vault_key, key_to_b64, seal_policy_files
 from hframe.shim_install import install_workspace_shim
 
 POLICY_REL = Path(".hframe") / "policy.allowlist"
@@ -35,6 +37,10 @@ AGENTS_APPEND = (
     "- `./hframe out`\n\n"
     "Do not attempt to modify synchronization behavior.\n"
     "Do not create alternative synchronization mechanisms.\n"
+    "Do not edit `../.hframe/`, `policy.allowlist`, or `policy.denylist` on the host.\n"
+    "Do not switch to denylist-only or widen the allowlist to work around sync or git errors.\n"
+    "Git dubious-ownership in containers is handled by the membrane; "
+    "fix workspace state, not policy.\n"
 )
 
 # Dev Containers: default workspace is only the git repo, so ../.hframe is invisible unless
@@ -49,7 +55,7 @@ _WORKSPACE_DEVCONTAINER = {
     "image": "mcr.microsoft.com/devcontainers/base:bookworm",
     "mounts": [
         "source=${localWorkspaceFolder}/..,target=/workspaces/hframe-root,type=bind,consistency=cached",
-        "source=${localWorkspaceFolder}/../.hframe,target=/workspaces/.hframe,type=bind,consistency=cached",
+        "source=${localWorkspaceFolder}/../.hframe,target=/workspaces/.hframe,type=bind,consistency=cached,readonly",
     ],
     "postCreateCommand": _SAFE_DIR_POSTCREATE,
 }
@@ -103,7 +109,9 @@ def membrane_directory_names(git_url: str) -> tuple[str, str]:
     return f"{slug}_repo", f"{slug}_workspace_repo"
 
 
-def bootstrap_membrane(git_url: str, parent: Path | None = None) -> None:
+def bootstrap_membrane(
+    git_url: str, parent: Path | None = None, *, use_vault: bool = False
+) -> None:
     """
     Create ``parent/<slug>_repo``, ``parent/<slug>_workspace_repo``,
     ``parent/.hframe/policy.allowlist`` and ``parent/.hframe/policy.denylist``
@@ -159,14 +167,37 @@ def bootstrap_membrane(git_url: str, parent: Path | None = None) -> None:
     elif not deny_policy.is_file():
         deny_policy.write_text(DEFAULT_DENYLIST_TEMPLATE, encoding="utf-8")
 
-    bootstrap_root = policy.parent.parent.resolve()
-    cfg = {
-        "original_rel": str(original.relative_to(bootstrap_root)),
-        "workspace_rel": str(workspace.relative_to(bootstrap_root)),
-        "policy_rel": str(policy.relative_to(bootstrap_root)),
-    }
-    pyz = policy.parent / MEMBRANE_PYZ_NAME
+    hframe_dir = policy.parent
+    bootstrap_root = hframe_dir.parent.resolve()
+    policy_paths: list[Path] = []
+    if use_vault:
+        vault_key = generate_vault_key()
+        allow_vault, deny_vault = seal_policy_files(
+            hframe_dir,
+            allow_plain=policy,
+            deny_plain=deny_policy,
+            key=vault_key,
+        )
+        policy_paths = [allow_vault, deny_vault]
+        cfg = {
+            "original_rel": str(original.relative_to(bootstrap_root)),
+            "workspace_rel": str(workspace.relative_to(bootstrap_root)),
+            "policy_vault": {
+                "allow_rel": str(allow_vault.relative_to(bootstrap_root)),
+                "deny_rel": str(deny_vault.relative_to(bootstrap_root)),
+                "key_b64": key_to_b64(vault_key),
+            },
+        }
+    else:
+        policy_paths = [p for p in (policy, deny_policy) if p.is_file()]
+        cfg = {
+            "original_rel": str(original.relative_to(bootstrap_root)),
+            "workspace_rel": str(workspace.relative_to(bootstrap_root)),
+            "policy_rel": str(policy.relative_to(bootstrap_root)),
+        }
+    pyz = hframe_dir / MEMBRANE_PYZ_NAME
     build_membrane_pyz(pyz, config=cfg)
+    harden_hframe_bundle(hframe_dir, policy_paths=policy_paths)
     install_workspace_shim(workspace / "hframe")
     write_workspace_devcontainer_if_missing(workspace)
     _append_agents_md(workspace)

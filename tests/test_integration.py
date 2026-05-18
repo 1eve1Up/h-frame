@@ -15,7 +15,12 @@ from hframe.membrane_bootstrap import (
     membrane_directory_names,
 )
 from hframe.operations import verify
-from hframe.sync_policy import PolicyMode, load_sync_policy, validate_sync_policy
+from hframe.sync_policy import (
+    PolicyMode,
+    load_sync_policy,
+    load_sync_policy_for_config,
+    validate_sync_policy,
+)
 
 
 def _run(cmd: list[str], cwd: Path | None = None) -> None:
@@ -101,6 +106,7 @@ def test_membrane_bootstrap_and_embedded_bridge(tmp_path: Path) -> None:
     assert (
         "hframe-root" in raw
         and "/workspaces/.hframe" in raw
+        and "readonly" in raw
         and "safe.directory" in raw
     )
 
@@ -157,3 +163,59 @@ def test_membrane_bootstrap_and_embedded_bridge(tmp_path: Path) -> None:
         ["git", "clone", str(bare), str(check)], check=True, capture_output=True
     )
     assert (check / "src" / "hello.txt").read_text(encoding="utf-8") == "v1\n"
+
+
+@pytest.mark.integration
+def test_membrane_bootstrap_vault_and_embedded_bridge(tmp_path: Path) -> None:
+    import re
+    import zipfile
+
+    pytest.importorskip("cryptography")
+    from hframe.config import PolicyVaultConfig
+    from hframe.policy_vault import key_from_b64
+
+    bare = _make_upstream_bare(tmp_path)
+    remote_url = bare.resolve().as_uri()
+    bootstrap_membrane(remote_url, tmp_path, use_vault=True)
+
+    protected_name, workspace_name = membrane_directory_names(remote_url)
+    original = tmp_path / protected_name
+    workspace = tmp_path / workspace_name
+    bridge = workspace / "hframe"
+    hf = tmp_path / ".hframe"
+    pyz = hf / MEMBRANE_PYZ_NAME
+
+    assert not (hf / "policy.allowlist").exists()
+    assert not (hf / "policy.denylist").exists()
+    assert (hf / "policy.allowlist.vault").is_file()
+    assert (hf / "policy.denylist.vault").is_file()
+
+    with zipfile.ZipFile(pyz) as zf:
+        main_src = zf.read("__main__.py").decode("utf-8")
+    m = re.search(r'"key_b64":"([^"]+)"', main_src.replace(" ", ""))
+    assert m
+    cfg = HFrameConfig(
+        original=original,
+        workspace=workspace,
+        policy_vault=PolicyVaultConfig(
+            allow=hf / "policy.allowlist.vault",
+            deny=hf / "policy.denylist.vault",
+            key=key_from_b64(m.group(1)),
+        ),
+    )
+    pol = load_sync_policy_for_config(cfg)
+    validate_sync_policy(pol)
+    assert pol.mode == PolicyMode.ALLOWLIST
+    assert "src/**" in pol.allow_patterns
+
+    _init_identity(original)
+    _init_identity(workspace)
+    env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+    subprocess.run(
+        [str(bridge), "in"],
+        cwd=str(workspace),
+        check=True,
+        env=env,
+        capture_output=True,
+    )
+    assert (workspace / "src" / "hello.txt").read_text(encoding="utf-8") == "v0\n"

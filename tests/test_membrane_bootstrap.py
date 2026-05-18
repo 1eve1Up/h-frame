@@ -49,6 +49,7 @@ def test_write_workspace_devcontainer_if_missing_creates_mounts(tmp_path: Path) 
     mounts = data["mounts"]
     assert any("hframe-root" in m for m in mounts)
     assert any("/workspaces/.hframe" in m for m in mounts)
+    assert any("readonly" in m and ".hframe" in m for m in mounts)
     assert "safe.directory" in data.get("postCreateCommand", "")
 
 
