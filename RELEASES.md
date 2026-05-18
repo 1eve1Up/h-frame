@@ -1,5 +1,24 @@
 # H-Frame releases
 
+## v2026.5.2
+
+**Date:** May 2026  
+**Stability:** early public preview  
+**Topology / contract:** evolving  
+**Production claim:** suitable for **controlled** agent workflows and experimentation—not a substitute for code review, SDLC policy, or execution sandboxing. See [README](README.md) and [PRD](PRD.md).
+
+- **Policy tamper resistance:** bootstrap sets POSIX ``0444`` on policy artifacts under ``.hframe/``; new devcontainers bind-mount ``../.hframe`` **read-only** (repos stay writable via ``hframe-root``). Optional ``hframe-bootstrap --vault`` encrypts ``policy.allowlist`` / ``policy.denylist`` to ``*.vault`` (plaintext removed) with a one-time key embedded only in ``hframe-membrane.pyz`` (``pip install 'hframe[vault]'``); installs ``./hframe-vault`` for ``HFRAME_VAULT_PASS=… ./hframe-vault decrypt|encrypt allowlist|denylist``. **Migration:** existing devcontainers—add ``,readonly`` to the ``.hframe`` mount line (see README).
+
+## v2026.5.1
+
+**Date:** May 2026  
+**Stability:** early public preview  
+**Topology / contract:** evolving  
+**Production claim:** suitable for **controlled** agent workflows and experimentation—not a substitute for code review, SDLC policy, or execution sandboxing. See [README](README.md) and [PRD](PRD.md).
+
+- **Dev Containers + membrane paths:** new bootstraps embed **bootstrap-relative** paths in the zipapp so ``./hframe in`` / ``out`` resolve ``*_repo`` and ``*_workspace_repo`` under the mounted ``hframe-root`` layout, not only on the host where bootstrap ran. Regenerate ``.hframe/hframe-membrane.pyz`` once after upgrading; zipapps with legacy absolute paths still work on the original host.
+- **Git in Dev Containers:** membrane ``git`` subprocesses pass ``-c safe.directory=<resolved-repo>`` so bind mounts are not blocked by “dubious ownership”; bootstrap-generated devcontainers also add global ``safe.directory '*'`` in ``postCreateCommand`` for interactive ``git`` (merge into your own ``postCreateCommand`` with ``&&`` if needed). Regenerate ``hframe-membrane.pyz`` after upgrading so the bundle includes this behavior.
+
 ## v2026.5.0
 
 **Date:** May 2026  
@@ -17,9 +36,6 @@ This is the first documented public-preview release line for H-Frame as describe
 - **Default policy files:** **`hframe-bootstrap`** writes **allowlist** lines in ``policy.allowlist`` (one pattern per repo-root path Git does not ignore, via ``git check-ignore``; directories as ``name/**``). **``policy.denylist``** is seeded from the protected clone’s root **``.gitignore``** (``!`` negation lines omitted). If no root paths qualify, bootstrap falls back to **denylist-only** (see README / PRD).
 - **Membrane zipapp:** `hframe-membrane.pyz` is now a **source** zipapp (``.py`` under ``.hframe/``), not bytecode-only, so it runs under any supported ``python3`` minor (e.g. bootstrap on 3.11, devcontainer on 3.12) without `can't find '__main__'` from magic skew. Re-bootstrap once to regenerate `.hframe/hframe-membrane.pyz`.
 - **Workspace launcher:** if ``<workspace-parent>/.hframe/`` is absent, resolves the zipapp when **exactly one** subdirectory of that parent contains ``.hframe/hframe-membrane.pyz`` (flat ``/workspaces/<slug>_workspace_repo`` next to ``/workspaces/hframe-root/.hframe``). Reinstall the workspace ``./hframe`` script after upgrading the ``hframe`` package.
-- **Dev Containers + membrane paths:** new bootstraps embed **bootstrap-relative** paths in the zipapp so ``./hframe in`` / ``out`` resolve ``*_repo`` and ``*_workspace_repo`` under the mounted ``hframe-root`` layout, not only on the host where bootstrap ran. Regenerate ``.hframe/hframe-membrane.pyz`` once after upgrading; zipapps with legacy absolute paths still work on the original host.
-- **Git in Dev Containers:** membrane ``git`` subprocesses pass ``-c safe.directory=<resolved-repo>`` so bind mounts are not blocked by “dubious ownership”; bootstrap-generated devcontainers also add global ``safe.directory '*'`` in ``postCreateCommand`` for interactive ``git`` (merge into your own ``postCreateCommand`` with ``&&`` if needed). Regenerate ``hframe-membrane.pyz`` after upgrading so the bundle includes this behavior.
-- **Policy tamper resistance:** bootstrap sets POSIX ``0444`` on policy artifacts under ``.hframe/``; new devcontainers bind-mount ``../.hframe`` **read-only** (repos stay writable via ``hframe-root``). Optional ``hframe-bootstrap --vault`` encrypts ``policy.allowlist`` / ``policy.denylist`` to ``*.vault`` (plaintext removed) with a one-time key embedded only in ``hframe-membrane.pyz`` (``pip install 'hframe[vault]'``); installs ``./hframe-vault`` for ``HFRAME_VAULT_PASS=… ./hframe-vault decrypt|encrypt allowlist|denylist``. **Migration:** existing devcontainers—add ``,readonly`` to the ``.hframe`` mount line (see README).
 
 ### Shipped scope (preview)
 
