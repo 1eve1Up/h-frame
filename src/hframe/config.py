@@ -11,7 +11,7 @@ MEMBRANE_PYZ_NAME = "hframe-membrane.pyz"
 
 @dataclass(frozen=True)
 class PolicyVaultConfig:
-    """Vault-encrypted policy blobs and the one-time key embedded in the membrane zipapp."""
+    """Vault-encrypted policy blobs; key is compiled into hframe-membrane.pyz."""
 
     allow: Path
     deny: Path

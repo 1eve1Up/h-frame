@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 from hframe.build_membrane_pyz import build_membrane_pyz
@@ -19,12 +21,12 @@ from hframe.gitignore_policy import (
 from hframe.operations import default_policy_template
 from hframe.policy_fs import harden_hframe_bundle
 from hframe.policy_vault import (
-    emit_vault_key_debug,
+    emit_vault_password_debug,
     generate_vault_key,
     key_to_b64,
     seal_policy_files,
 )
-from hframe.shim_install import install_workspace_shim
+from hframe.shim_install import install_bootstrap_vault_cli, install_workspace_shim
 
 POLICY_REL = Path(".hframe") / "policy.allowlist"
 POLICY_DENY_REL = Path(".hframe") / "policy.denylist"
@@ -114,6 +116,16 @@ def membrane_directory_names(git_url: str) -> tuple[str, str]:
     return f"{slug}_repo", f"{slug}_workspace_repo"
 
 
+def _require_vault_cli_installed() -> None:
+    if importlib.util.find_spec("hframe.vault_cli") is None:
+        raise RuntimeError(
+            "hframe-bootstrap --vault requires hframe.vault_cli in the active Python "
+            f"({sys.executable}). Install from a current tree, e.g.\n"
+            "  pip install -e '/path/to/H-Frame[vault]'\n"
+            "Then re-run bootstrap."
+        )
+
+
 def bootstrap_membrane(
     git_url: str, parent: Path | None = None, *, use_vault: bool = False
 ) -> None:
@@ -176,8 +188,9 @@ def bootstrap_membrane(
     bootstrap_root = hframe_dir.parent.resolve()
     policy_paths: list[Path] = []
     if use_vault:
+        _require_vault_cli_installed()
         vault_key = generate_vault_key()
-        emit_vault_key_debug(vault_key)
+        emit_vault_password_debug(vault_key)
         allow_vault, deny_vault = seal_policy_files(
             hframe_dir,
             allow_plain=policy,
@@ -205,6 +218,8 @@ def bootstrap_membrane(
     build_membrane_pyz(pyz, config=cfg)
     harden_hframe_bundle(hframe_dir, policy_paths=policy_paths)
     install_workspace_shim(workspace / "hframe")
+    if use_vault:
+        install_bootstrap_vault_cli(bootstrap_root)
     write_workspace_devcontainer_if_missing(workspace)
     _append_agents_md(workspace)
 

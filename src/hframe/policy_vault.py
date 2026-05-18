@@ -1,4 +1,4 @@
-"""Encrypt host-local policy files at bootstrap; key embedded only in the membrane zipapp."""
+"""Encrypt host-local policy; one-time vault password compiled into hframe-membrane.pyz."""
 
 from __future__ import annotations
 
@@ -9,12 +9,11 @@ import sys
 from pathlib import Path
 
 BOOTSTRAP_DEBUG_ENV = "HFRAME_BOOTSTRAP_DEBUG"
+VAULT_PASS_ENV = "HFRAME_VAULT_PASS"
 
 VAULT_MAGIC = "HFV1"
 ALLOW_VAULT_NAME = "policy.allowlist.vault"
 DENY_VAULT_NAME = "policy.denylist.vault"
-
-
 def require_cryptography():
     """Import ``cryptography`` or raise with install hint."""
     try:
@@ -35,23 +34,72 @@ def key_to_b64(key: bytes) -> str:
     return base64.urlsafe_b64encode(key).decode("ascii")
 
 
+def key_from_b64(token: str) -> bytes:
+    key = base64.urlsafe_b64decode(token.encode("ascii"))
+    if len(key) != 32:
+        raise ValueError("vault password must decode to 32 bytes (url-safe base64)")
+    return key
+
+
 def bootstrap_debug_enabled() -> bool:
     return os.environ.get(BOOTSTRAP_DEBUG_ENV) == "1"
 
 
-def emit_vault_key_debug(key: bytes) -> None:
-    """Print the vault key to stdout when ``HFRAME_BOOTSTRAP_DEBUG=1`` (operator recovery)."""
+def emit_vault_password_debug(key: bytes) -> None:
+    """Print compiled vault password when ``HFRAME_BOOTSTRAP_DEBUG=1`` at bootstrap."""
     if not bootstrap_debug_enabled():
         return
-    sys.stdout.write(f"hframe-bootstrap: vault key (debug): {key_to_b64(key)}\n")
+    sys.stdout.write(
+        "hframe-bootstrap: vault password "
+        f"(export {VAULT_PASS_ENV}={key_to_b64(key)!r} for ./hframe-vault)\n"
+    )
     sys.stdout.flush()
 
 
-def key_from_b64(token: str) -> bytes:
-    key = base64.urlsafe_b64decode(token.encode("ascii"))
-    if len(key) != 32:
-        raise ValueError("vault key must decode to 32 bytes")
-    return key
+def vault_password_from_env() -> bytes:
+    """Operator-supplied vault password (must match the value compiled into the zipapp)."""
+    token = os.environ.get(VAULT_PASS_ENV, "").strip()
+    if not token:
+        raise ValueError(
+            f"{VAULT_PASS_ENV} must be set to the vault password "
+            "(printed at bootstrap when HFRAME_BOOTSTRAP_DEBUG=1, or from your records)"
+        )
+    return key_from_b64(token)
+
+
+def embedded_vault_key_b64_from_hframe(hframe_dir: Path) -> str:
+    """Read compiled ``policy_vault.key_b64`` from ``hframe-membrane.pyz``."""
+    import re
+    import zipfile
+
+    from hframe.config import MEMBRANE_PYZ_NAME
+
+    pyz = hframe_dir / MEMBRANE_PYZ_NAME
+    if not pyz.is_file():
+        raise ValueError(f"membrane zipapp not found: {pyz}")
+    src = zipfile.ZipFile(pyz).read("__main__.py").decode()
+    m = re.search(r'"key_b64":"([^"]+)"', src.replace(" ", ""))
+    if not m:
+        raise ValueError(
+            "hframe-membrane.pyz has no policy_vault.key_b64 (not a --vault bootstrap?)"
+        )
+    return m.group(1)
+
+
+def membrane_vault_key(hframe_dir: Path) -> bytes:
+    """Password compiled into ``hframe-membrane.pyz``; used by ``./hframe in|out``."""
+    return key_from_b64(embedded_vault_key_b64_from_hframe(hframe_dir))
+
+
+def assert_vault_password_matches_membrane(hframe_dir: Path) -> bytes:
+    """Return env password after checking it matches the compiled membrane password."""
+    operator_key = vault_password_from_env()
+    if operator_key != membrane_vault_key(hframe_dir):
+        raise ValueError(
+            f"{VAULT_PASS_ENV} does not match the vault password compiled into "
+            "hframe-membrane.pyz"
+        )
+    return operator_key
 
 
 def encrypt_policy_plaintext(plaintext: str, key: bytes) -> str:

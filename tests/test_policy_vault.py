@@ -9,12 +9,14 @@ cryptography = pytest.importorskip("cryptography")
 from hframe.policy_vault import (  # noqa: E402
     bootstrap_debug_enabled,
     decrypt_policy_blob,
-    emit_vault_key_debug,
+    emit_vault_password_debug,
     encrypt_policy_plaintext,
     generate_vault_key,
     key_from_b64,
     key_to_b64,
+    membrane_vault_key,
     read_vault_file,
+    vault_password_from_env,
     write_vault_file,
 )
 
@@ -45,27 +47,25 @@ def test_key_b64_round_trip() -> None:
     assert key_from_b64(key_to_b64(key)) == key
 
 
-def test_emit_vault_key_debug_prints_when_env_set(
+def test_vault_password_from_env_required(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("HFRAME_VAULT_PASS", raising=False)
+    with pytest.raises(ValueError, match="HFRAME_VAULT_PASS"):
+        vault_password_from_env()
+
+
+def test_emit_vault_password_debug(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     key = generate_vault_key()
     monkeypatch.delenv("HFRAME_BOOTSTRAP_DEBUG", raising=False)
-    emit_vault_key_debug(key)
+    emit_vault_password_debug(key)
     assert capsys.readouterr().out == ""
     monkeypatch.setenv("HFRAME_BOOTSTRAP_DEBUG", "1")
     assert bootstrap_debug_enabled()
-    emit_vault_key_debug(key)
+    emit_vault_password_debug(key)
     out = capsys.readouterr().out
-    assert out.startswith("hframe-bootstrap: vault key (debug): ")
+    assert "HFRAME_VAULT_PASS" in out
     assert key_to_b64(key) in out
-
-
-def test_emit_vault_key_debug_silent_for_other_env_values(
-    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    monkeypatch.setenv("HFRAME_BOOTSTRAP_DEBUG", "true")
-    emit_vault_key_debug(generate_vault_key())
-    assert capsys.readouterr().out == ""
 
 
 def test_write_read_vault_file(tmp_path: Path) -> None:
@@ -73,3 +73,20 @@ def test_write_read_vault_file(tmp_path: Path) -> None:
     path = tmp_path / "policy.allowlist.vault"
     write_vault_file(path, "a\n", key)
     assert read_vault_file(path, key) == "a\n"
+
+
+def test_membrane_vault_key_from_stub_pyz(tmp_path: Path) -> None:
+    import json
+    import zipfile
+
+    key = b"m" * 32
+    hf = tmp_path / ".hframe"
+    hf.mkdir()
+    cfg = json.dumps(
+        {"policy_vault": {"key_b64": key_to_b64(key)}},
+        separators=(",", ":"),
+    )
+    pyz = hf / "hframe-membrane.pyz"
+    with zipfile.ZipFile(pyz, "w") as zf:
+        zf.writestr("__main__.py", f"import json\n_CFG=json.loads({cfg!r})\n")
+    assert membrane_vault_key(hf) == key

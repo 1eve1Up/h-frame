@@ -189,6 +189,7 @@ def test_membrane_bootstrap_vault_and_embedded_bridge(tmp_path: Path) -> None:
     assert not (hf / "policy.denylist").exists()
     assert (hf / "policy.allowlist.vault").is_file()
     assert (hf / "policy.denylist.vault").is_file()
+    assert (tmp_path / "hframe-vault").is_file()
 
     with zipfile.ZipFile(pyz) as zf:
         main_src = zf.read("__main__.py").decode("utf-8")

@@ -489,136 +489,40 @@ Refresh workspace from canonical repo.
 
 **Policy tamper resistance:** `.hframe/` lives on the bootstrap parent, not in the workspace git tree. Bootstrap sets policy files to **read-only** (`0444` on POSIX). Generated devcontainers mount `../.hframe` **read-only** so agents cannot rewrite allow/deny lists inside the container. Edit policy on the **host** (or temporarily drop the readonly mount)—not via agent prompts. **Git dubious ownership** in containers is handled by the membrane (`safe.directory` per repo); do not widen the allowlist or switch to denylist-only to “fix” git errors.
 
-**Vault mode (optional):** `pip install 'hframe[vault]'` then `hframe-bootstrap --vault <git-url>` encrypts policy on disk (`policy.allowlist.vault`, `policy.denylist.vault`); the one-time key is embedded only in `hframe-membrane.pyz`. To change policy without a full re-bootstrap, decrypt and re-seal on the **host** (see **Manual vault policy edit** below).
+**Vault mode (optional):** `pip install 'hframe[vault]'` then `hframe-bootstrap --vault <git-url>` encrypts `policy.allowlist` / `policy.denylist` on disk and compiles a **one-time vault password** into `hframe-membrane.pyz`. `./hframe in|out` uses that compiled password automatically (agents do not need env). Operators edit policy with `./hframe-vault` and `HFRAME_VAULT_PASS` (see below).
 
 #### Manual vault policy edit (decrypt and re-seal)
 
-Use this when the layout already exists and you need to edit allow/deny patterns without running `hframe-bootstrap` on a fresh parent.
+**Bootstrap** (`hframe-bootstrap --vault`) generates a random vault password, encrypts policy files, embeds the password in `hframe-membrane.pyz`, and installs `./hframe-vault` on the bootstrap parent.
 
-**Setup (do this once per shell)**
-
-The snippets below use a Python environment where `hframe` is installed (they are not plain-stdlib one-liners):
-
-```bash
-cd /path/to/bootstrap-parent    # directory that contains .hframe/, *_repo/, *_workspace_repo/
-python3 -m venv .venv             # optional; skip if you already use a venv
-source .venv/bin/activate         # Windows: .venv\Scripts\activate
-pip install 'hframe[vault]'
-export PARENT="$(pwd)"
-```
-
-Set `PARENT` and `KEY_B64` before each block. If you omit `PARENT`, paths like `Path("$PARENT")` will be wrong. In a Dev Container, edit from the **host** (the `.hframe` mount is **read-only** inside the container).
-
-**1. Recover the vault key**
-
-The key is a 32-byte secret, stored url-safe base64 as `key_b64` inside `hframe-membrane.pyz` (not in the workspace git tree).
-
-From the zipapp (`$PARENT` must already be set—see **Setup**):
-
-```bash
-python3 -c "
-import re, zipfile
-from pathlib import Path
-src = zipfile.ZipFile(Path('$PARENT') / '.hframe/hframe-membrane.pyz').read('__main__.py').decode()
-m = re.search(r'\"key_b64\":\"([^\"]+)\"', src.replace(' ', ''))
-if not m:
-    raise SystemExit('no policy_vault key in zipapp (not a --vault bootstrap?)')
-print(m.group(1))
-"
-```
-
-Save the printed token as `KEY_B64`. At **initial** bootstrap only, you can also print it with:
+To print the password once at bootstrap (save it for later):
 
 ```bash
 HFRAME_BOOTSTRAP_DEBUG=1 hframe-bootstrap --vault '<git-url>'
+# prints: export HFRAME_VAULT_PASS='…' for ./hframe-vault
 ```
 
-**2. Decrypt to plaintext (inspect or edit)**
+**During the workspace lifetime**, decrypt/edit/re-encrypt on the **host** (not inside a read-only Dev Container `.hframe` mount):
 
 ```bash
-export KEY_B64='paste-token-here'
-python3 <<PY
-from pathlib import Path
-from hframe.policy_vault import key_from_b64, read_vault_file
+cd /path/to/bootstrap-parent
+source .venv/bin/activate
+export HFRAME_VAULT_PASS='…'    # url-safe base64 password from bootstrap debug output
 
-hf = Path("$PARENT") / ".hframe"
-key = key_from_b64("$KEY_B64")
-allow = read_vault_file(hf / "policy.allowlist.vault", key)
-deny = read_vault_file(hf / "policy.denylist.vault", key)
-(hf / "policy.allowlist.edit").write_text(allow, encoding="utf-8")
-(hf / "policy.denylist.edit").write_text(deny, encoding="utf-8")
-print("wrote", hf / "policy.allowlist.edit", "and", hf / "policy.denylist.edit")
-PY
+./hframe-vault decrypt allowlist
+# edit .hframe/policy.allowlist.edit
+./hframe-vault encrypt allowlist
+
+./hframe-vault decrypt denylist
+# edit .hframe/policy.denylist.edit
+./hframe-vault encrypt denylist
 ```
 
-Edit `policy.allowlist.edit` and `policy.denylist.edit` with a normal text editor. Use the same line syntax as plaintext policy (see [PRD.md](PRD.md) policy model).
+`encrypt` checks that `HFRAME_VAULT_PASS` matches the password compiled into `hframe-membrane.pyz`, then re-seals the vault file. **`./hframe in|out` does not use `HFRAME_VAULT_PASS`**—it reads the compiled password from the zipapp.
 
-**3. Re-encrypt (re-seal) with the same key**
+You do not need to rebuild `hframe-membrane.pyz` after re-seal (same compiled password).
 
-Bootstrap sets `policy.*.vault` to **read-only** (`0444`). You must make them writable before overwriting (the script below uses `permit_policy_vault_rewrite`; or run `chmod u+w .hframe/policy.*.vault`).
-
-After editing, write the vault blobs back and remove the temporary edit files:
-
-```bash
-python3 <<PY
-from pathlib import Path
-from hframe.policy_vault import key_from_b64, write_vault_file
-from hframe.policy_fs import harden_hframe_bundle, permit_policy_vault_rewrite
-
-hf = Path("$PARENT") / ".hframe"
-key = key_from_b64("$KEY_B64")
-permit_policy_vault_rewrite(hf)
-allow = (hf / "policy.allowlist.edit").read_text(encoding="utf-8")
-deny = (hf / "policy.denylist.edit").read_text(encoding="utf-8")
-write_vault_file(hf / "policy.allowlist.vault", allow, key)
-write_vault_file(hf / "policy.denylist.vault", deny, key)
-(hf / "policy.allowlist.edit").unlink(missing_ok=True)
-(hf / "policy.denylist.edit").unlink(missing_ok=True)
-harden_hframe_bundle(hf, policy_paths=[hf / "policy.allowlist.vault", hf / "policy.denylist.vault"])
-print("re-sealed vault policy")
-PY
-```
-
-You do **not** need to rebuild `hframe-membrane.pyz` if `KEY_B64` is unchanged—the embedded key still matches the on-disk blobs.
-
-**4. Optional: rotate the vault key**
-
-If you want a new random key (old zipapp would no longer decrypt policy):
-
-1. Generate and seal with Python: `generate_vault_key()`, `key_to_b64()`, `write_vault_file()` as above.
-2. Rebuild the zipapp so embedded `policy_vault.key_b64` matches, using the same `original_rel` / `workspace_rel` / `allow_rel` / `deny_rel` as today’s bundle:
-
-```bash
-python3 <<PY
-import json, zipfile
-from pathlib import Path
-from hframe.build_membrane_pyz import build_membrane_pyz
-from hframe.policy_fs import permit_policy_vault_rewrite
-from hframe.policy_vault import generate_vault_key, key_to_b64, write_vault_file
-
-parent = Path("$PARENT")
-hf = parent / ".hframe"
-pyz = hf / "hframe-membrane.pyz"
-src = zipfile.ZipFile(pyz).read("__main__.py").decode()
-start = src.index("json.loads(") + len("json.loads(")
-quote = src[start]
-end = start + 1
-while src[end] != quote:
-    end += 1
-cfg = json.loads(src[start + 1 : end])
-new_key = generate_vault_key()
-permit_policy_vault_rewrite(hf)
-allow = (hf / "policy.allowlist.edit").read_text(encoding="utf-8")
-deny = (hf / "policy.denylist.edit").read_text(encoding="utf-8")
-write_vault_file(hf / "policy.allowlist.vault", allow, new_key)
-write_vault_file(hf / "policy.denylist.vault", deny, new_key)
-cfg["policy_vault"]["key_b64"] = key_to_b64(new_key)
-build_membrane_pyz(pyz, config=cfg)
-print("rotated key and rebuilt", pyz)
-PY
-```
-
-For key rotation, decrypt to `*.edit` first (step 2), edit, then run this block (it re-seals and rebuilds the zipapp in one pass).
+Install: `pip install -e '/path/to/H-Frame[vault]'`. Policy line syntax: [PRD.md](PRD.md).
 
 **Policy + `rsync --delete`:** behavior is defined by `../.hframe/policy.allowlist` (or vault blobs when `--vault` was used; see [PRD.md](PRD.md) policy model). **`hframe-bootstrap`** seeds **allowlist** mode by default: **one pattern per repo-root path** that Git does not ignore (via `git check-ignore`), directories as `name/**` and files by basename. **`.hframe/policy.denylist`** is still filled from the protected clone’s root **`.gitignore`** (minus `!` lines) and is merged **after** built-in denies, so ignored subtrees stay out of the sync surface. **`.git/`** and the repo-root **`./hframe`** launcher are never mirrored. If no root paths qualify (edge case), bootstrap writes **denylist-only** instead. For a full-tree sync except denies, replace `policy.allowlist` with the denylist-only directive (README).
 

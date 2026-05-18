@@ -24,6 +24,7 @@ dev = [
 
 [project.scripts]
 hframe-bootstrap = "hframe.bootstrap_cli:main"
+hframe-vault = "hframe.vault_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

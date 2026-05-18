@@ -146,11 +146,50 @@ if __name__ == "__main__":
 """
 
 
-def _install_posix_python_launcher(dest: Path) -> None:
+def _install_posix_script(dest: Path, body: str) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text(_posix_launcher_source(), encoding="utf-8")
+    dest.write_text(body, encoding="utf-8")
     mode = dest.stat().st_mode
     dest.chmod(mode | 0o111)
+
+
+def _install_posix_python_launcher(dest: Path) -> None:
+    _install_posix_script(dest, _posix_launcher_source())
+
+
+def _vault_cli_launcher_source(python: str) -> str:
+    """Launcher uses the interpreter that ran bootstrap (venv), not an arbitrary ``python3``."""
+    return f"""#!{python}
+import runpy
+import sys
+
+try:
+    rc = runpy.run_module("hframe.vault_cli", run_name="__main__")
+except ModuleNotFoundError:
+    sys.stderr.write(
+        "hframe-vault: hframe.vault_cli not found for this interpreter.\\n"
+        f"  {sys.executable}\\n"
+        "  pip install -e '/path/to/H-Frame[vault]'\\n"
+    )
+    raise SystemExit(1)
+raise SystemExit(rc or 0)
+"""
+
+
+def install_bootstrap_vault_cli(bootstrap_root: Path) -> Path:
+    """
+    Install ``<bootstrap-root>/hframe-vault`` for operator policy decrypt/re-seal.
+
+    Requires ``hframe[vault]`` in the operator Python environment (same as bootstrap).
+    """
+    if sys.platform == "win32":
+        raise RuntimeError(
+            "hframe-bootstrap --vault: hframe-vault operator script is POSIX-only; "
+            "use Python snippets in README on Windows."
+        )
+    dest = bootstrap_root.resolve() / "hframe-vault"
+    _install_posix_script(dest, _vault_cli_launcher_source(sys.executable))
+    return dest
 
 
 def install_workspace_shim(dest: Path) -> None:

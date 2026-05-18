@@ -17,6 +17,7 @@ _EXCLUDE_PACKAGE_FILES = frozenset(
         "build_membrane_pyz.py",
         "membrane_bootstrap.py",
         "shim_install.py",
+        "vault_cli.py",
     }
 )
 
