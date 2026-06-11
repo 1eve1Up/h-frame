@@ -217,11 +217,6 @@ The goal is:
 
 # Release and stability
 
-**Version:** `2026.5.2` (preview line `v2026.5.2`; see `RELEASES.md`)
-**Stability:** early public preview
-**Topology status:** evolving
-**Production claim:** suitable for controlled agent workflows and experimentation; not a replacement for broader SDLC governance.
-
 See `RELEASES.md` for release notes and migration guidance.
 
 ## Roadmap
