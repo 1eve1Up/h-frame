@@ -14,6 +14,8 @@ VAULT_PASS_ENV = "HFRAME_VAULT_PASS"
 VAULT_MAGIC = "HFV1"
 ALLOW_VAULT_NAME = "policy.allowlist.vault"
 DENY_VAULT_NAME = "policy.denylist.vault"
+
+
 def require_cryptography():
     """Import ``cryptography`` or raise with install hint."""
     try:

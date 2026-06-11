@@ -190,7 +190,7 @@ hframe-bootstrap [--vault] '<git_url>'
 * **Exactly one argument:** the git URL to clone.
 * **`--vault` (optional):** encrypt policy on disk; key embedded only in the membrane zipapp (`pip install 'hframe[vault]'`).
 * No other flags on the operator surface for the standard agent workflow.
-* Creates `<slug>_repo/`, `<slug>_workspace_repo/`, seeds `.hframe/` policy templates, builds the zipapp, installs **`./hframe`** into the workspace, and appends **AGENTS.md** sync rules.
+* Creates `<slug>_repo/`, `<slug>_workspace_repo/`, seeds `.hframe/` policy templates, builds the zipapp, installs **`./hframe`** into the workspace; default sync rules are in README; optional operator append to **AGENTS.md** via `HFRAME_AGENTS_APPEND_FILE`.
 
 ### Agent surface: `./hframe`
 
@@ -235,7 +235,7 @@ High-level steps performed by **`hframe-bootstrap`** (see [README.md](README.md)
 5. **Build** `.hframe/hframe-membrane.pyz` (source zipapp with `hframe` `.py` under `.hframe/`; not shipped inside the workspace git tree).
 6. **Install** the **`./hframe`** workspace launcher (POSIX: portable `python3` script; Windows: prebuilt `hframe-shim-*.exe`).
 7. **Write** a minimal **`.devcontainer/devcontainer.json`** into the workspace when none exists (Dev Container bind mounts for `./hframe`; see README).
-8. **Append** H-Frame instructions to workspace **AGENTS.md** (`./hframe in`, `./hframe out`; do not subvert membrane).
+8. **Optionally** append operator-provided content to workspace **AGENTS.md** when `HFRAME_AGENTS_APPEND_FILE` is set (shell env or `.hframe/bootstrap.env`); default H-Frame sync rules are documented in README.
 
 ---
 

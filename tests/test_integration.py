@@ -85,7 +85,7 @@ def test_membrane_bootstrap_and_embedded_bridge(tmp_path: Path) -> None:
     assert not any(n.endswith(".pyc") for n in names), names
     assert list_remotes(workspace) == []
     assert "origin" in list_remotes(original)
-    assert "H-Frame Sync Rules" in (workspace / "AGENTS.md").read_text(encoding="utf-8")
+    assert not (workspace / "AGENTS.md").exists()
 
     policy_allow = tmp_path / ".hframe" / "policy.allowlist"
     policy_deny = tmp_path / ".hframe" / "policy.denylist"

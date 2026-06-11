@@ -24,7 +24,9 @@ from hframe.vault_cli import cmd_decrypt, cmd_encrypt, main
 
 
 def _write_stub_pyz(hf: Path, key: bytes) -> None:
-    cfg = json.dumps({"policy_vault": {"key_b64": key_to_b64(key)}}, separators=(",", ":"))
+    cfg = json.dumps(
+        {"policy_vault": {"key_b64": key_to_b64(key)}}, separators=(",", ":")
+    )
     with zipfile.ZipFile(hf / "hframe-membrane.pyz", "w") as zf:
         zf.writestr("__main__.py", f"import json\n_CFG=json.loads({cfg!r})\n")
 

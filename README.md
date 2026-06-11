@@ -2,7 +2,7 @@
 
 H-Frame is a **repository isolation topology for AI-assisted software delivery**.
 
-H-Frame assumes something most current agent tooling still avoids admitting:
+H-Frame assumes something many current agentic frameworks still avoid admitting:
 
 > Code agents are smart, useful, increasingly powerful… and fundamentally stochastic.
 
@@ -25,7 +25,7 @@ Most AI coding infrastructure responds by giving agents:
 
 H-Frame goes the opposite direction.
 
-Instead of trying to create a perfectly obedient agent, H-Frame creates a topology where imperfect agents are operationally survivable.
+Instead of trying to create a perfectly obedient agent, H-Frame creates a topology where imperfect agents are better contained.
 
 The core idea is simple:
 
@@ -240,7 +240,7 @@ North star: **Portable topology contract (layout + sync semantics + receipts) th
 * Creates an isolated workspace copy
 * Removes all workspace git remotes immediately
 * Creates a local `./hframe` helper inside the workspace
-* Appends AGENTS.md instructions automatically
+* Documents default agent sync rules in README (optional operator snippet append to `AGENTS.md` when configured)
 * Syncs workspace changes through allowlist- and denylist-controlled rsync
 * Export scope is not widened through the `./hframe` CLI; changing what syncs means editing host-side policy (operator)
 * Uses deterministic `in` / `out` synchronization commands only
@@ -394,18 +394,25 @@ With remotes removed from the workspace clone, a normal `git push` to upstream i
 
 ---
 
-## 4. Append AGENTS.md instructions
+## 4. Optional AGENTS.md append
 
-Bootstrap appends deterministic H-Frame instructions automatically.
+Bootstrap does **not** write default H-Frame sync rules to workspace `AGENTS.md`; those live under **H-Frame Sync Rules** in this README.
 
-Agents learn only:
+Optionally, bootstrap appends operator-provided agent guidance when `HFRAME_AGENTS_APPEND_FILE` points at a markdown snippet file. Set it in the shell or in `.hframe/bootstrap.env` (relative paths resolve from the **current working directory** where you run `hframe-bootstrap`; shell exports win over the env file).
+
+Bootstrap reads `.hframe/bootstrap.env` from the layout directory, the process working directory, or **the parent of the layout directory** (for example `hframe-scratch-workspaces/.hframe/bootstrap.env` while `create-hframe-parent.sh` runs bootstrap inside `podbay-parent/`). Appended content lands in **`<slug>_workspace_repo/AGENTS.md`**, not the bootstrap parent folder.
 
 ```bash
-./hframe in
-./hframe out
+# Optional: append custom agent rules at bootstrap (snippet one level up from the layout dir)
+HFRAME_AGENTS_APPEND_FILE='../MYAGENTS.md' hframe-bootstrap 'git@github.com:org/repo.git'
+
+# Or persist in the scratch workspace (works with create-hframe-parent.sh)
+echo 'HFRAME_AGENTS_APPEND_FILE=../MYAGENTS.md' >> .hframe/bootstrap.env
+./create-hframe-parent.sh 'git@github.com:org/repo.git'
+# then: cat podbay_workspace_repo/AGENTS.md
 ```
 
-Nothing else.
+If the variable is unset, bootstrap leaves `AGENTS.md` unchanged (only present when copied from upstream or written by your snippet).
 
 ---
 
@@ -583,12 +590,24 @@ Work only inside:
 
 ---
 
-## Agent sync
+## A Suggested `AGENTS.md` Ruleset:
 
-```bash
-./hframe in
-./hframe out
+```markdown
+## H-Frame Sync Rules
+
+- Use `./hframe in` instead of `git pull`.
+- Use `./hframe out` instead of `git push`.
+- Do not attempt to modify Git remote synchronization behavior.
+- Do not create alternative Git remote synchronization mechanisms.
 ```
+
+A goal of this ruleset is to help ensure that agents will NOT be able to easily do things like:
+1. Edit `../.hframe/`, `policy.allowlist`, or `policy.denylist` on the host.
+1. Switch to denylist-only or widen the allowlist to work around sync or git errors.
+
+The less awareness an agent has about H-Frame internals, mechanisms, and policy files, likely the safer.
+
+Also notable: Git dubious-ownership in setups like devcontainers will be handled by the H-Frame membrane; we want agents to change workspace state, not sync policy.
 
 ---
 

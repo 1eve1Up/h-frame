@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import re
 import subprocess
 import sys
@@ -37,18 +38,8 @@ DEFAULT_DENYLIST_TEMPLATE = (
     "# secrets/**\n"
 )
 
-AGENTS_APPEND = (
-    "\n## H-Frame Sync Rules\n\n"
-    "Use:\n"
-    "- `./hframe in`\n"
-    "- `./hframe out`\n\n"
-    "Do not attempt to modify synchronization behavior.\n"
-    "Do not create alternative synchronization mechanisms.\n"
-    "Do not edit `../.hframe/`, `policy.allowlist`, or `policy.denylist` on the host.\n"
-    "Do not switch to denylist-only or widen the allowlist to work around sync or git errors.\n"
-    "Git dubious-ownership in containers is handled by the membrane; "
-    "fix workspace state, not policy.\n"
-)
+BOOTSTRAP_ENV_REL = Path(".hframe") / "bootstrap.env"
+AGENTS_APPEND_FILE_ENV = "HFRAME_AGENTS_APPEND_FILE"
 
 # Dev Containers: default workspace is only the git repo, so ../.hframe is invisible unless
 # we add bind mounts. Two targets match shim_install.resolve_membrane_pyz (direct + hframe-root).
@@ -140,11 +131,18 @@ def bootstrap_membrane(
     Windows: prebuilt ``.exe``),
     add ``<slug>_workspace_repo/.devcontainer/devcontainer.json`` when missing (Dev
     Container bind mounts for ``../.hframe`` and the bootstrap parent),
-    and append ``AGENTS.md``.
+    and optionally append operator-provided content to workspace ``AGENTS.md`` when
+    ``HFRAME_AGENTS_APPEND_FILE`` is set (shell env or ``.hframe/bootstrap.env``).
+
+    Default H-Frame sync rules are documented in README, not written to ``AGENTS.md``.
+
+    Relative paths in ``HFRAME_AGENTS_APPEND_FILE`` resolve from the process working
+    directory when bootstrap starts, not from the bootstrap parent layout directory.
 
     ``slug`` is derived from ``git_url`` (see ``repo_slug_from_git_url``).
     """
-    root = (parent or Path.cwd()).resolve()
+    bootstrap_cwd = Path.cwd().resolve()
+    root = (parent or bootstrap_cwd).resolve()
     protected_name, workspace_name = membrane_directory_names(git_url)
     original = root / protected_name
     workspace = root / workspace_name
@@ -221,14 +219,94 @@ def bootstrap_membrane(
     if use_vault:
         install_bootstrap_vault_cli(bootstrap_root)
     write_workspace_devcontainer_if_missing(workspace)
-    _append_agents_md(workspace)
+    append_path = resolve_agents_append_file(bootstrap_root, cwd=bootstrap_cwd)
+    _append_agents_md(workspace, append_path)
 
 
-def _append_agents_md(workspace: Path) -> None:
+def _parse_bootstrap_env_file(env_file: Path) -> list[tuple[str, str]]:
+    if not env_file.is_file():
+        return []
+    pairs: list[tuple[str, str]] = []
+    for raw_line in env_file.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        key, sep, value = line.partition("=")
+        if not sep:
+            continue
+        key = key.strip()
+        if not key:
+            continue
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        pairs.append((key, value))
+    return pairs
+
+
+def load_bootstrap_env(bootstrap_root: Path, *, cwd: Path | None = None) -> None:
+    """
+    Load ``.hframe/bootstrap.env`` into ``os.environ``.
+
+    Checks, in order (later files override earlier; shell exports always win):
+
+    1. ``<layout-parent>/.hframe/bootstrap.env`` (scratch workspace above ``*-parent/``)
+    2. ``<cwd>/.hframe/bootstrap.env``
+    3. ``<bootstrap-root>/.hframe/bootstrap.env``
+    """
+    base = (cwd or Path.cwd()).resolve()
+    root = bootstrap_root.resolve()
+    seen: set[Path] = set()
+    candidates: list[Path] = []
+    for env_file in (
+        root.parent / BOOTSTRAP_ENV_REL,
+        base / BOOTSTRAP_ENV_REL,
+        root / BOOTSTRAP_ENV_REL,
+    ):
+        resolved = env_file.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        candidates.append(resolved)
+
+    initial_keys = frozenset(os.environ)
+    merged: dict[str, str] = {}
+    for env_file in candidates:
+        for key, value in _parse_bootstrap_env_file(env_file):
+            merged[key] = value
+    for key, value in merged.items():
+        if key not in initial_keys:
+            os.environ[key] = value
+
+
+def resolve_agents_append_file(
+    bootstrap_root: Path, *, cwd: Path | None = None
+) -> Path | None:
+    """Return the operator snippet path from env, or ``None`` when unset."""
+    load_bootstrap_env(bootstrap_root, cwd=cwd)
+    raw = os.environ.get(AGENTS_APPEND_FILE_ENV, "").strip()
+    if not raw:
+        return None
+    base = (cwd or Path.cwd()).resolve()
+    path = Path(raw)
+    if not path.is_absolute():
+        path = base / path
+    path = path.resolve()
+    if not path.is_file():
+        raise ValueError(
+            f"{AGENTS_APPEND_FILE_ENV}={raw!r} does not resolve to a readable file: {path}"
+        )
+    return path
+
+
+def _append_agents_md(workspace: Path, append_file: Path | None) -> None:
+    if append_file is None:
+        return
+    snippet = append_file.read_text(encoding="utf-8")
     path = workspace / "AGENTS.md"
     if path.is_file():
-        path.write_text(
-            path.read_text(encoding="utf-8") + AGENTS_APPEND, encoding="utf-8"
-        )
+        existing = path.read_text(encoding="utf-8")
+        separator = "" if existing.endswith("\n") or not snippet else "\n"
+        path.write_text(existing + separator + snippet, encoding="utf-8")
     else:
-        path.write_text(AGENTS_APPEND.lstrip("\n"), encoding="utf-8")
+        path.write_text(snippet.lstrip("\n"), encoding="utf-8")

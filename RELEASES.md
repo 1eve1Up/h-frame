@@ -1,5 +1,14 @@
 # H-Frame releases
 
+## v2026.6.0
+
+**Date:** June 2026  
+**Stability:** early public preview  
+**Topology / contract:** evolving  
+**Production claim:** suitable for **controlled** agent workflows and experimentation—not a substitute for code review, SDLC policy, or execution sandboxing. See [README](README.md) and [PRD](PRD.md).
+
+- **Agent sync rules:** default H-Frame sync guidance moved from auto-appended workspace ``AGENTS.md`` to README (**H-Frame Sync Rules**). Operators who want workspace-local snippets can set ``HFRAME_AGENTS_APPEND_FILE`` or ``.hframe/bootstrap.env`` before bootstrap (see README).
+
 ## v2026.5.2
 
 **Date:** May 2026  
