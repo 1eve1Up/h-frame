@@ -25,7 +25,7 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help=(
             "Encrypt policy.allowlist and policy.denylist on disk; embed a one-time key "
-            "only in hframe-membrane.pyz (requires: pip install 'h-frame[vault]')."
+            "only in hframe-membrane.pyz (requires: pip install -e '.[vault]' from a clone)."
         ),
     )
     args = parser.parse_args(argv)
@@ -35,7 +35,7 @@ def main(argv: list[str] | None = None) -> int:
         except ImportError:
             sys.stderr.write(
                 "hframe-bootstrap: --vault requires cryptography; "
-                "install with: pip install 'h-frame[vault]'\n"
+                "install with: pip install -e '.[vault]'\n"
             )
             return 1
     try:

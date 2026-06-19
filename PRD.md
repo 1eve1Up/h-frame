@@ -188,7 +188,7 @@ hframe-bootstrap [--vault] '<git_url>'
 ```
 
 * **Exactly one argument:** the git URL to clone.
-* **`--vault` (optional):** encrypt policy on disk; key embedded only in the membrane zipapp (`pip install 'h-frame[vault]'`).
+* **`--vault` (optional):** encrypt policy on disk; key embedded only in the membrane zipapp (`pip install -e '.[vault]'` from a clone).
 * No other flags on the operator surface for the standard agent workflow.
 * Creates `<slug>_repo/`, `<slug>_workspace_repo/`, seeds `.hframe/` policy templates, builds the zipapp, installs **`./hframe`** into the workspace; default sync rules are in README; optional operator append to **AGENTS.md** via `HFRAME_AGENTS_APPEND_FILE`.
 

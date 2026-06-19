@@ -44,8 +44,6 @@ dev = [
   "twine>=5.0",
 ]
 
-# Due to PyPI namespace availability, the package is published as h-frame,
-# but the executables remain hframe (hframe, hframe-bootstrap, hframe-vault).
 [project.scripts]
 hframe-bootstrap = "hframe.bootstrap_cli:main"
 hframe-vault = "hframe.vault_cli:main"

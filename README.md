@@ -1,8 +1,5 @@
 # H-Frame
 
-[![PyPI](https://img.shields.io/pypi/v/h-frame)](https://pypi.org/project/h-frame/)
-[![Python](https://img.shields.io/pypi/pyversions/h-frame)](https://pypi.org/project/h-frame/)
-
 H-Frame is a **repository isolation topology for AI-assisted software delivery**.
 
 H-Frame assumes something many current agentic frameworks still avoid admitting:
@@ -303,19 +300,15 @@ Requirements:
 * rsync
 * On **Windows**, a prebuilt `h-frame-shim-windows-amd64.exe` under `hframe/native/prebuilt/` in the installed wheel (operators building from source must supply it; see `src/hframe/native/prebuilt/README.md`)
 
-Install from PyPI (operators):
+Install from a clone (operators):
 
 ```bash
-pip install h-frame
-```
-
-Due to PyPI namespace availability, the package is published as **`h-frame`**, but the executable remains **`hframe`**.
-
-From a clone:
-
-```bash
+git clone https://github.com/1eve1Up/h-frame.git
+cd h-frame
 pip install -e .
 ```
+
+Vault extras: `pip install -e '.[vault]'`
 
 For development:
 
@@ -474,11 +467,11 @@ The first line exposes the full bootstrap parent at `/workspaces/hframe-root/` (
 **Upgrading the workspace ``./hframe`` script in a devcontainer:** the one-liner that calls ``install_workspace_shim`` imports the **``hframe``** Python package. Install it in the same container (agents do not use a global install for sync, but **operators** need it here to rewrite ``./hframe``):
 
 ```bash
-pip install h-frame
+pip install -e '/path/to/h-frame'
 python3 -c "from pathlib import Path; from hframe.shim_install import install_workspace_shim; install_workspace_shim(Path('hframe').resolve())"
 ```
 
-Or use ``pip install -e /path/to/h-frame`` from a clone. You can add ``pip install h-frame`` to ``postCreateCommand`` next to ``go mod download`` if you want this to happen automatically.
+You can add ``pip install -e /path/to/h-frame`` to ``postCreateCommand`` next to ``go mod download`` if you want this to happen automatically.
 
 **Verify the membrane exists in the container** (after fixing mounts):
 
@@ -502,7 +495,7 @@ Refresh workspace from canonical repo.
 
 **Policy tamper resistance:** `.hframe/` lives on the bootstrap parent, not in the workspace git tree. Bootstrap sets policy files to **read-only** (`0444` on POSIX). Generated devcontainers mount `../.hframe` **read-only** so agents cannot rewrite allow/deny lists inside the container. Edit policy on the **host** (or temporarily drop the readonly mount)—not via agent prompts. **Git dubious ownership** in containers is handled by the membrane (`safe.directory` per repo); do not widen the allowlist or switch to denylist-only to “fix” git errors.
 
-**Vault mode (optional):** `pip install 'h-frame[vault]'` then `hframe-bootstrap --vault <git-url>` encrypts `policy.allowlist` / `policy.denylist` on disk and compiles a **one-time vault password** into `hframe-membrane.pyz`. `./hframe in|out` uses that compiled password automatically (agents do not need env). Operators edit policy with `./hframe-vault` and `HFRAME_VAULT_PASS` (see below).
+**Vault mode (optional):** `pip install -e '.[vault]'` from a clone, then `hframe-bootstrap --vault <git-url>` encrypts `policy.allowlist` / `policy.denylist` on disk and compiles a **one-time vault password** into `hframe-membrane.pyz`. `./hframe in|out` uses that compiled password automatically (agents do not need env). Operators edit policy with `./hframe-vault` and `HFRAME_VAULT_PASS` (see below).
 
 #### Manual vault policy edit (decrypt and re-seal)
 

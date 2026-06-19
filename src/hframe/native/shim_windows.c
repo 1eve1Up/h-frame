@@ -159,7 +159,7 @@ int wmain(int argc, wchar_t **argv) {
                  L"hframe: missing membrane bundle. Tried:\n  %s\n  %s\n"
                  L"If those files are missing, add Dev Container bind mounts (see README "
                  L"Devcontainers).\n"
-                 L"To refresh this launcher, install the h-frame package (pip install h-frame) "
+                 L"To refresh this launcher, install the hframe package (pip install -e /path/to/h-frame) "
                  L"then run the install_workspace_shim one-liner from README Devcontainers.\n",
                  tried_direct, tried_devc);
         return 2;

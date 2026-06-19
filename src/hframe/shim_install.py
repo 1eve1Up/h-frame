@@ -132,8 +132,8 @@ def _main() -> int:
             "(see README Devcontainers); "
             "workspaces bootstrapped without an existing .devcontainer get one "
             "with the needed mounts.\\n"
-            "To refresh this launcher, install the h-frame package in this environment "
-            "(pip install h-frame) then run the install_workspace_shim one-liner from README "
+            "To refresh this launcher, install the hframe package in this environment "
+            "(pip install -e /path/to/h-frame) then run install_workspace_shim from README "
             "Devcontainers.\\n"
         )
         return 2
@@ -180,7 +180,7 @@ def install_bootstrap_vault_cli(bootstrap_root: Path) -> Path:
     """
     Install ``<bootstrap-root>/hframe-vault`` for operator policy decrypt/re-seal.
 
-    Requires ``h-frame[vault]`` in the operator Python environment (same as bootstrap).
+    Requires ``pip install -e '.[vault]'`` from a clone (operator Python env, same as bootstrap).
     """
     if sys.platform == "win32":
         raise RuntimeError(

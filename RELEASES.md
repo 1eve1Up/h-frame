@@ -7,11 +7,11 @@
 **Topology / contract:** evolving  
 **Production claim:** suitable for **controlled** agent workflows and experimentation—not a substitute for code review, SDLC policy, or execution sandboxing. See [README](README.md) and [PRD](PRD.md).
 
-- **PyPI:** first publish as distribution **`h-frame`** (``pip install h-frame``; import remains ``hframe``; executables remain ``hframe-bootstrap`` / ``hframe-vault``—see ``pyproject.toml``). GitHub: **`1eve1Up/h-frame`**.
-- **Windows shim:** prebuilt **`h-frame-shim-windows-amd64.exe`** in the wheel (see ``src/hframe/native/prebuilt/``).
-- **Release CI:** tag **`v2026.6.1`** runs build, ``twine check``, tests, and PyPI upload via [``.github/workflows/publish.yml``](.github/workflows/publish.yml) (Trusted Publisher on account **`1eve1Up`**, environment **`pypi`**).
+- **Distribution:** install from GitHub clone (``pip install -e .``; import ``hframe``; executables ``hframe-bootstrap`` / ``hframe-vault``). Repo: **`1eve1Up/h-frame`**.
+- **Windows shim:** prebuilt **`h-frame-shim-windows-amd64.exe`** in the wheel built by CI (see ``src/hframe/native/prebuilt/``).
+- **Release line:** GitHub tag **`v2026.6.1`**; CI builds and validates wheels via [``.github/workflows/ci.yml``](.github/workflows/ci.yml).
 
-**Packaging note:** The release line is **`v2026.6.1`**. The PyPI distribution is **`h-frame`** at version **`2026.6.1`**. Push tag **`v2026.6.1`** to run the release workflow.
+**Packaging note:** The release line is **`v2026.6.1`**. Package version in ``pyproject.toml`` is **`2026.6.1`**. Bump ``pyproject.toml`` and ``src/hframe/__init__.py`` together when shipping.
 
 ## v2026.6.0
 
@@ -29,7 +29,7 @@
 **Topology / contract:** evolving  
 **Production claim:** suitable for **controlled** agent workflows and experimentation—not a substitute for code review, SDLC policy, or execution sandboxing. See [README](README.md) and [PRD](PRD.md).
 
-- **Policy tamper resistance:** bootstrap sets POSIX ``0444`` on policy artifacts under ``.hframe/``; new devcontainers bind-mount ``../.hframe`` **read-only** (repos stay writable via ``hframe-root``). Optional ``hframe-bootstrap --vault`` encrypts ``policy.allowlist`` / ``policy.denylist`` to ``*.vault`` (plaintext removed) with a one-time key embedded only in ``hframe-membrane.pyz`` (``pip install 'h-frame[vault]'``); installs ``./hframe-vault`` for ``HFRAME_VAULT_PASS=… ./hframe-vault decrypt|encrypt allowlist|denylist``. **Migration:** existing devcontainers—add ``,readonly`` to the ``.hframe`` mount line (see README).
+- **Policy tamper resistance:** bootstrap sets POSIX ``0444`` on policy artifacts under ``.hframe/``; new devcontainers bind-mount ``../.hframe`` **read-only** (repos stay writable via ``hframe-root``). Optional ``hframe-bootstrap --vault`` encrypts ``policy.allowlist`` / ``policy.denylist`` to ``*.vault`` (plaintext removed) with a one-time key embedded only in ``hframe-membrane.pyz`` (``pip install -e '.[vault]'`` from a clone); installs ``./hframe-vault`` for ``HFRAME_VAULT_PASS=… ./hframe-vault decrypt|encrypt allowlist|denylist``. **Migration:** existing devcontainers—add ``,readonly`` to the ``.hframe`` mount line (see README).
 
 ## v2026.5.1
 
@@ -50,7 +50,7 @@
 
 This is the first documented public-preview release line for H-Frame as described in the README and PRD.
 
-**Packaging note:** The release line is **`v2026.5.0`**. The installable Python package version in `pyproject.toml` is **`2026.5.0`** (PyPI does not use a `v` prefix). Bump `pyproject.toml` and `src/hframe/__init__.py` together when shipping a new package of this line.
+**Packaging note:** The release line is **`v2026.5.0`**. Package version in ``pyproject.toml`` is **`2026.5.0`**. Bump ``pyproject.toml`` and ``src/hframe/__init__.py`` together when shipping.
 
 ### Package `2026.5.0` (May 2026)
 
@@ -82,9 +82,10 @@ pytest
 Operator install (bootstrap only; agents use `./hframe` in the workspace):
 
 ```bash
-pip install h-frame
-# or from clone:
+git clone https://github.com/1eve1Up/h-frame.git
+cd h-frame
 pip install -e .
+# vault: pip install -e '.[vault]'
 ```
 
 ### Stability statement

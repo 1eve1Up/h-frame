@@ -23,7 +23,7 @@ def require_cryptography():
     except ImportError as e:
         raise ImportError(
             "policy vault requires the cryptography package; "
-            "install with: pip install 'h-frame[vault]'"
+            "install with: pip install -e '.[vault]'"
         ) from e
     return AESGCM
 
