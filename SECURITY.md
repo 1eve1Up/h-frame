@@ -2,9 +2,9 @@
 
 ## Supported versions
 
-H-Frame is in **early public preview**. The documented preview line is **`v2026.6.2`** (see [README](README.md) — Release and stability, and [RELEASES.md](RELEASES.md)).
+H-Frame is in **early public preview**. The documented preview line is **`v2026.6.3`** (see [README](README.md) — Release and stability, and [RELEASES.md](RELEASES.md)).
 
-Security-sensitive fixes are prioritized for **current `main`** and the latest **published Python package** on PyPI (`h-frame`, version **`2026.6.2`** in `pyproject.toml`, release line **`v2026.6.2`** in docs).
+Security-sensitive fixes are prioritized for **current `main`** and the latest **published Python package** on PyPI (`h-frame`, version **`2026.6.3`** in `pyproject.toml`, release line **`v2026.6.3`** in docs).
 
 Until an explicit stable commitment:
 
@@ -24,23 +24,23 @@ Include where possible:
 
 - affected **`h-frame` package version** (`pyproject.toml` / `pip show h-frame`) or **git commit**
 - OS and versions of **git**, **rsync**, and **Python**
-- whether the report concerns **operator** (`h-frame-bootstrap`) or **agent** (`./hframe`) surfaces
+- whether the report concerns **operator** (`hframe-bootstrap`) or **agent** (`./hframe`) surfaces
 - minimal reproduction steps and impact assessment (no live customer secrets)
 
 ## Trust boundary (what H-Frame is and is not)
 
 H-Frame is a **repository isolation and sync membrane**, not a sandbox runtime (PRD **Non-Goals**; README **H-Frame vs Sandboxes**).
 
-### Operator host (`h-frame-bootstrap`)
+### Operator host (`hframe-bootstrap`)
 
 Runs as the invoking user and may:
 
 - **`git clone`** the URL you pass (treat URLs like untrusted input until you trust the remote).
 - **`rsync`** and **`cp`** between protected and workspace trees according to **host-controlled** policy under **`.hframe/`** (not inside the agent workspace).
 - **POSIX:** bootstrap writes a short **`#!/usr/bin/env python3`** workspace script that `execvp`'s `python3` on the membrane zipapp (portable across Linux and macOS, including devcontainers).
-- **Windows:** copy a **prebuilt** `hframe-shim-*.exe` from package data (no compiler path).
+- **Windows:** copy a **prebuilt** `h-frame-shim-*.exe` from package data (no compiler path).
 
-Policy files **must** remain under operator control. New bootstraps harden `.hframe/` with read-only policy modes (POSIX) and a **read-only** Dev Container bind mount for `../.hframe`; agents should not rewrite policy inside the container. Optional `h-frame-bootstrap --vault` stores encrypted policy on disk with the decryption key embedded only in `hframe-membrane.pyz`—this deters casual edits but does **not** resist a hostile agent with the same UID who can read the zipapp. Git “dubious ownership” is handled by membrane `safe.directory`, not by editing allowlists.
+Policy files **must** remain under operator control. New bootstraps harden `.hframe/` with read-only policy modes (POSIX) and a **read-only** Dev Container bind mount for `../.hframe`; agents should not rewrite policy inside the container. Optional `hframe-bootstrap --vault` stores encrypted policy on disk with the decryption key embedded only in `hframe-membrane.pyz`—this deters casual edits but does **not** resist a hostile agent with the same UID who can read the zipapp. Git “dubious ownership” is handled by membrane `safe.directory`, not by editing allowlists.
 
 ### Agent workspace (`./hframe`)
 

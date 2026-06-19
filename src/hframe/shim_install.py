@@ -132,7 +132,7 @@ def _main() -> int:
             "(see README Devcontainers); "
             "workspaces bootstrapped without an existing .devcontainer get one "
             "with the needed mounts.\\n"
-            "To refresh this launcher, install the hframe package in this environment "
+            "To refresh this launcher, install the h-frame package in this environment "
             "(pip install h-frame) then run the install_workspace_shim one-liner from README "
             "Devcontainers.\\n"
         )
@@ -184,7 +184,7 @@ def install_bootstrap_vault_cli(bootstrap_root: Path) -> Path:
     """
     if sys.platform == "win32":
         raise RuntimeError(
-            "h-frame-bootstrap --vault: hframe-vault operator script is POSIX-only; "
+            "hframe-bootstrap --vault: hframe-vault operator script is POSIX-only; "
             "use Python snippets in README on Windows."
         )
     dest = bootstrap_root.resolve() / "hframe-vault"
@@ -201,7 +201,7 @@ def install_workspace_shim(dest: Path) -> None:
     ``<workspace-parent>/.hframe/``, then ``<workspace-parent>/hframe-root/.hframe/``
     (README devcontainer mount), then a unique sibling ``*/.hframe/``.
 
-    On Windows, copies ``hframe/native/prebuilt/hframe-shim-<tag>.exe`` into ``dest``.
+    On Windows, copies ``hframe/native/prebuilt/h-frame-shim-<tag>.exe`` into ``dest``.
     """
     if sys.platform != "win32":
         _install_posix_python_launcher(dest)
@@ -210,7 +210,7 @@ def install_workspace_shim(dest: Path) -> None:
     tag = shim_resource_tag()
     prebuilt_dir = _package_native_dir() / "prebuilt"
     if tag:
-        src = prebuilt_dir / f"hframe-shim-{tag}.exe"
+        src = prebuilt_dir / f"h-frame-shim-{tag}.exe"
         if src.is_file():
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dest)
@@ -218,9 +218,9 @@ def install_workspace_shim(dest: Path) -> None:
 
     if not tag:
         raise RuntimeError(
-            "h-frame-bootstrap: unsupported Windows machine type for prebuilt shims."
+            "hframe-bootstrap: unsupported Windows machine type for prebuilt shims."
         )
     raise RuntimeError(
-        "h-frame-bootstrap: no prebuilt Windows shim (hframe-shim-"
+        "hframe-bootstrap: no prebuilt Windows shim (h-frame-shim-"
         f"{tag}.exe). Add it under hframe/native/prebuilt/; see native/prebuilt/README.md."
     )

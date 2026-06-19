@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "h-frame"
-version = "2026.6.2"
+version = "2026.6.3"
 description = "H-Frame: compile-time repository isolation membrane"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -44,8 +44,14 @@ dev = [
   "twine>=5.0",
 ]
 
+
+# Console scripts use the "hframe" prefix, not "h-frame". PyPI distribution name is
+# "h-frame" (the "hframe" project name is taken). PATH entry points stay aligned with
+# import hframe and on-disk topology (.hframe/, ./hframe). They are not PyPI names—
+# another package could install a conflicting hframe-* script; we accept that rather
+# than hyphenated CLIs that suggest a different namespace than the runtime layout.
 [project.scripts]
-h-frame-bootstrap = "hframe.bootstrap_cli:main"
+hframe-bootstrap = "hframe.bootstrap_cli:main"
 hframe-vault = "hframe.vault_cli:main"
 
 [tool.setuptools.packages.find]

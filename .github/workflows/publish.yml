@@ -7,13 +7,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write
   contents: read
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    environment: pypi
     steps:
       - uses: actions/checkout@v4
 
@@ -58,8 +56,8 @@ jobs:
               sys.exit("no wheel produced")
           with zipfile.ZipFile(wheels[-1]) as zf:
               names = zf.namelist()
-          if not any(n.endswith("hframe-shim-windows-amd64.exe") for n in names):
-              sys.exit("wheel missing hframe-shim-windows-amd64.exe")
+          if not any(n.endswith("h-frame-shim-windows-amd64.exe") for n in names):
+              sys.exit("wheel missing h-frame-shim-windows-amd64.exe")
           PY
 
       - name: Lint and test
@@ -67,5 +65,5 @@ jobs:
           ruff check src tests
           pytest
 
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      # PyPI upload disabled until Trusted Publisher is configured on pypi.org.
+      # Re-enable with pypa/gh-action-pypi-publish@release/v1 and environment: pypi.

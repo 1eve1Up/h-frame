@@ -1,4 +1,4 @@
-"""Operator entrypoint: ``h-frame-bootstrap [--vault] <git_url>``."""
+"""Operator entrypoint: ``hframe-bootstrap [--vault] <git_url>``."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from hframe.membrane_bootstrap import bootstrap_membrane
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        prog="h-frame-bootstrap",
+        prog="hframe-bootstrap",
         description=(
             "Bootstrap H-Frame membrane: <slug>_repo/, <slug>_workspace_repo/, and ./hframe."
         ),
@@ -34,14 +34,14 @@ def main(argv: list[str] | None = None) -> int:
             import cryptography  # noqa: F401
         except ImportError:
             sys.stderr.write(
-                "h-frame-bootstrap: --vault requires cryptography; "
+                "hframe-bootstrap: --vault requires cryptography; "
                 "install with: pip install 'h-frame[vault]'\n"
             )
             return 1
     try:
         bootstrap_membrane(args.git_url, Path.cwd(), use_vault=args.vault)
     except Exception as e:
-        sys.stderr.write(f"h-frame-bootstrap: {e}\n")
+        sys.stderr.write(f"hframe-bootstrap: {e}\n")
         return 1
     return 0
 

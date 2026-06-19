@@ -6,6 +6,14 @@ import pytest
 
 cryptography = pytest.importorskip("cryptography")
 
+from hframe.env_vars import (
+    H_FRAME_AGENTS_APPEND_FILE,
+    H_FRAME_BOOTSTRAP_DEBUG,
+    H_FRAME_VAULT_PASS,
+    LEGACY_HFRAME_AGENTS_APPEND_FILE,
+    LEGACY_HFRAME_BOOTSTRAP_DEBUG,
+    LEGACY_HFRAME_VAULT_PASS,
+)
 from hframe.policy_vault import (  # noqa: E402
     bootstrap_debug_enabled,
     decrypt_policy_blob,
@@ -48,24 +56,39 @@ def test_key_b64_round_trip() -> None:
 
 
 def test_vault_password_from_env_required(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("HFRAME_VAULT_PASS", raising=False)
-    with pytest.raises(ValueError, match="HFRAME_VAULT_PASS"):
+    monkeypatch.delenv(H_FRAME_VAULT_PASS, raising=False)
+    monkeypatch.delenv(LEGACY_HFRAME_VAULT_PASS, raising=False)
+    with pytest.raises(ValueError, match=H_FRAME_VAULT_PASS):
         vault_password_from_env()
+
+
+def test_vault_password_from_env_legacy_name(monkeypatch: pytest.MonkeyPatch) -> None:
+    key = generate_vault_key()
+    monkeypatch.delenv(H_FRAME_VAULT_PASS, raising=False)
+    monkeypatch.setenv(LEGACY_HFRAME_VAULT_PASS, key_to_b64(key))
+    assert vault_password_from_env() == key
 
 
 def test_emit_vault_password_debug(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     key = generate_vault_key()
-    monkeypatch.delenv("HFRAME_BOOTSTRAP_DEBUG", raising=False)
+    monkeypatch.delenv(H_FRAME_BOOTSTRAP_DEBUG, raising=False)
+    monkeypatch.delenv(LEGACY_HFRAME_BOOTSTRAP_DEBUG, raising=False)
     emit_vault_password_debug(key)
     assert capsys.readouterr().out == ""
-    monkeypatch.setenv("HFRAME_BOOTSTRAP_DEBUG", "1")
+    monkeypatch.setenv(H_FRAME_BOOTSTRAP_DEBUG, "1")
     assert bootstrap_debug_enabled()
     emit_vault_password_debug(key)
     out = capsys.readouterr().out
-    assert "HFRAME_VAULT_PASS" in out
+    assert H_FRAME_VAULT_PASS in out
     assert key_to_b64(key) in out
+
+
+def test_bootstrap_debug_legacy_env_name(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv(H_FRAME_BOOTSTRAP_DEBUG, raising=False)
+    monkeypatch.setenv(LEGACY_HFRAME_BOOTSTRAP_DEBUG, "1")
+    assert bootstrap_debug_enabled()
 
 
 def test_write_read_vault_file(tmp_path: Path) -> None:

@@ -3,13 +3,22 @@
 from __future__ import annotations
 
 import base64
-import os
 import secrets
 import sys
 from pathlib import Path
 
-BOOTSTRAP_DEBUG_ENV = "HFRAME_BOOTSTRAP_DEBUG"
-VAULT_PASS_ENV = "HFRAME_VAULT_PASS"
+from hframe.env_vars import (
+    H_FRAME_BOOTSTRAP_DEBUG,
+    H_FRAME_VAULT_PASS,
+    LEGACY_HFRAME_BOOTSTRAP_DEBUG,
+    LEGACY_HFRAME_VAULT_PASS,
+    env_flag,
+    env_value,
+)
+
+# Re-export for callers that imported these names from policy_vault.
+BOOTSTRAP_DEBUG_ENV = H_FRAME_BOOTSTRAP_DEBUG
+VAULT_PASS_ENV = H_FRAME_VAULT_PASS
 
 VAULT_MAGIC = "HFV1"
 ALLOW_VAULT_NAME = "policy.allowlist.vault"
@@ -44,27 +53,28 @@ def key_from_b64(token: str) -> bytes:
 
 
 def bootstrap_debug_enabled() -> bool:
-    return os.environ.get(BOOTSTRAP_DEBUG_ENV) == "1"
+    return env_flag(H_FRAME_BOOTSTRAP_DEBUG, LEGACY_HFRAME_BOOTSTRAP_DEBUG)
 
 
 def emit_vault_password_debug(key: bytes) -> None:
-    """Print compiled vault password when ``HFRAME_BOOTSTRAP_DEBUG=1`` at bootstrap."""
+    """Print compiled vault password when ``H_FRAME_BOOTSTRAP_DEBUG=1`` at bootstrap."""
     if not bootstrap_debug_enabled():
         return
     sys.stdout.write(
-        "h-frame-bootstrap: vault password "
-        f"(export {VAULT_PASS_ENV}={key_to_b64(key)!r} for ./hframe-vault)\n"
+        "hframe-bootstrap: vault password "
+        f"(export {H_FRAME_VAULT_PASS}={key_to_b64(key)!r} for ./hframe-vault)\n"
     )
     sys.stdout.flush()
 
 
 def vault_password_from_env() -> bytes:
     """Operator-supplied vault password (must match the value compiled into the zipapp)."""
-    token = os.environ.get(VAULT_PASS_ENV, "").strip()
+    token = env_value(H_FRAME_VAULT_PASS, LEGACY_HFRAME_VAULT_PASS)
     if not token:
         raise ValueError(
-            f"{VAULT_PASS_ENV} must be set to the vault password "
-            "(printed at bootstrap when HFRAME_BOOTSTRAP_DEBUG=1, or from your records)"
+            f"{H_FRAME_VAULT_PASS} must be set to the vault password "
+            f"(printed at bootstrap when {H_FRAME_BOOTSTRAP_DEBUG}=1, or from your records; "
+            f"legacy name {LEGACY_HFRAME_VAULT_PASS} is still accepted)"
         )
     return key_from_b64(token)
 
@@ -98,7 +108,7 @@ def assert_vault_password_matches_membrane(hframe_dir: Path) -> bytes:
     operator_key = vault_password_from_env()
     if operator_key != membrane_vault_key(hframe_dir):
         raise ValueError(
-            f"{VAULT_PASS_ENV} does not match the vault password compiled into "
+            f"{H_FRAME_VAULT_PASS} does not match the vault password compiled into "
             "hframe-membrane.pyz"
         )
     return operator_key

@@ -2,13 +2,13 @@
 
 Thanks for helping improve H-Frame.
 
-H-Frame is a **repository isolation topology** for AI-assisted delivery: a protected git clone, a workspace copy without remotes, and a small `./hframe` bridge (`in` / `out` only). Keep contributions scoped, tested, and honest about what the membrane guarantees versus what remains operator responsibility (see [README](README.md) and [PRD](PRD.md)). The current release line is **`v2026.6.2`**; the PyPI distribution is **`h-frame`** at version **`2026.6.2`** (see `RELEASES.md` for package-level notes).
+H-Frame is a **repository isolation topology** for AI-assisted delivery: a protected git clone, a workspace copy without remotes, and a small `./hframe` bridge (`in` / `out` only). Keep contributions scoped, tested, and honest about what the membrane guarantees versus what remains operator responsibility (see [README](README.md) and [PRD](PRD.md)). The current release line is **`v2026.6.3`**; the PyPI distribution is **`h-frame`** at version **`2026.6.3`** (see `RELEASES.md` for package-level notes).
 
 ## Prerequisites
 
-- **Python** 3.11+ for `h-frame-bootstrap` and for running the membrane zipapp (source bundle; see README)
+- **Python** 3.11+ for `hframe-bootstrap` and for running the membrane zipapp (source bundle; see README)
 - **git** and **rsync** on `PATH` (integration tests exercise both)
-- **Windows:** a prebuilt `hframe-shim-windows-amd64.exe` under `src/hframe/native/prebuilt/` when packaging the wheel (see that directory’s README). POSIX workspace bootstrap installs a **portable `python3` launcher**; optional reference native build: `native/shim.c`.
+- **Windows:** a prebuilt `h-frame-shim-windows-amd64.exe` under `src/hframe/native/prebuilt/` when packaging the wheel (see that directory’s README). POSIX workspace bootstrap installs a **portable `python3` launcher**; optional reference native build: `native/shim.c`.
 
 ## Local verification
 

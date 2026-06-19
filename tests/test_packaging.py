@@ -11,7 +11,7 @@ import hframe
 ROOT = Path(__file__).resolve().parents[1]
 PYPROJECT = ROOT / "pyproject.toml"
 PREBUILT_EXE = (
-    ROOT / "src" / "hframe" / "native" / "prebuilt" / "hframe-shim-windows-amd64.exe"
+    ROOT / "src" / "hframe" / "native" / "prebuilt" / "h-frame-shim-windows-amd64.exe"
 )
 
 
@@ -32,8 +32,15 @@ def test_pyproject_distribution_name() -> None:
 def test_bootstrap_console_script_name() -> None:
     data = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
     scripts = data["project"]["scripts"]
-    assert "h-frame-bootstrap" in scripts
-    assert "hframe-bootstrap" not in scripts
+    assert "hframe-bootstrap" in scripts
+    assert "h-frame-bootstrap" not in scripts
+
+
+def test_vault_console_script_name() -> None:
+    data = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    scripts = data["project"]["scripts"]
+    assert "hframe-vault" in scripts
+    assert "h-frame-vault" not in scripts
 
 
 def test_windows_shim_prebuilt_exists() -> None:
@@ -49,4 +56,4 @@ def test_built_wheel_includes_windows_shim() -> None:
         return
     with zipfile.ZipFile(wheels[-1]) as zf:
         names = zf.namelist()
-    assert any(name.endswith("hframe-shim-windows-amd64.exe") for name in names)
+    assert any(name.endswith("h-frame-shim-windows-amd64.exe") for name in names)

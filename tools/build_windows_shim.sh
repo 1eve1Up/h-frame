@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Build hframe-shim-windows-amd64.exe for src/hframe/native/prebuilt/.
+# Build h-frame-shim-windows-amd64.exe for src/hframe/native/prebuilt/.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="${ROOT}/src/hframe/native/shim_windows.c"
-OUT="${ROOT}/src/hframe/native/prebuilt/hframe-shim-windows-amd64.exe"
+OUT="${ROOT}/src/hframe/native/prebuilt/h-frame-shim-windows-amd64.exe"
 
 CC="${MINGW_CC:-x86_64-w64-mingw32-gcc}"
 if ! command -v "${CC}" >/dev/null 2>&1; then

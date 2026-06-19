@@ -5,13 +5,13 @@ Bootstrap installs the workspace bridge as follows:
 | OS | Workspace `hframe` |
 |----|---------------------|
 | Linux / macOS | Portable **`#!/usr/bin/env python3`** script (stdlib only); no prebuilt binary required |
-| Windows x64 | Prebuilt **`hframe-shim-windows-amd64.exe`** copied from this directory into the wheel |
+| Windows x64 | Prebuilt **`h-frame-shim-windows-amd64.exe`** copied from this directory into the wheel |
 
 ## Windows file name
 
 | Tag | File |
 |-----|------|
-| Windows x64 | `hframe-shim-windows-amd64.exe` |
+| Windows x64 | `h-frame-shim-windows-amd64.exe` |
 
 Tags are chosen from `platform.machine()` and `sys.platform` at bootstrap time.
 

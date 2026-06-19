@@ -181,16 +181,16 @@ Sibling of the two repos under the same parent:
 
 ## Membrane appliance model
 
-### Operator surface: `h-frame-bootstrap`
+### Operator surface: `hframe-bootstrap`
 
 ```bash
-h-frame-bootstrap [--vault] '<git_url>'
+hframe-bootstrap [--vault] '<git_url>'
 ```
 
 * **Exactly one argument:** the git URL to clone.
 * **`--vault` (optional):** encrypt policy on disk; key embedded only in the membrane zipapp (`pip install 'h-frame[vault]'`).
 * No other flags on the operator surface for the standard agent workflow.
-* Creates `<slug>_repo/`, `<slug>_workspace_repo/`, seeds `.hframe/` policy templates, builds the zipapp, installs **`./hframe`** into the workspace; default sync rules are in README; optional operator append to **AGENTS.md** via `HFRAME_AGENTS_APPEND_FILE`.
+* Creates `<slug>_repo/`, `<slug>_workspace_repo/`, seeds `.hframe/` policy templates, builds the zipapp, installs **`./hframe`** into the workspace; default sync rules are in README; optional operator append to **AGENTS.md** via `H_FRAME_AGENTS_APPEND_FILE`.
 
 ### Agent surface: `./hframe`
 
@@ -226,22 +226,22 @@ Optional denylist paths are resolved relative to the same `.hframe/` directory o
 
 ## Bootstrap workflow (normative)
 
-High-level steps performed by **`h-frame-bootstrap`** (see [README.md](README.md)):
+High-level steps performed by **`hframe-bootstrap`** (see [README.md](README.md)):
 
 1. **Clone** the URL into **`<slug>_repo/`** (protected).
 2. **Copy** tree to **`<slug>_workspace_repo/`** (workspace).
 3. **Remove all remotes** from the workspace; assert workspace has no remotes.
 4. Ensure **`.hframe/policy.allowlist`** and **`.hframe/policy.denylist`**: after the protected clone exists, bootstrap writes defaults when those files were absent (allowlist from non-ignored root paths, or denylist-only if none; denylist from **`<slug>_repo/.gitignore`**).
 5. **Build** `.hframe/hframe-membrane.pyz` (source zipapp with `hframe` `.py` under `.hframe/`; not shipped inside the workspace git tree).
-6. **Install** the **`./hframe`** workspace launcher (POSIX: portable `python3` script; Windows: prebuilt `hframe-shim-*.exe`).
+6. **Install** the **`./hframe`** workspace launcher (POSIX: portable `python3` script; Windows: prebuilt `h-frame-shim-*.exe`).
 7. **Write** a minimal **`.devcontainer/devcontainer.json`** into the workspace when none exists (Dev Container bind mounts for `./hframe`; see README).
-8. **Optionally** append operator-provided content to workspace **AGENTS.md** when `HFRAME_AGENTS_APPEND_FILE` is set (shell env or `.hframe/bootstrap.env`); default H-Frame sync rules are documented in README.
+8. **Optionally** append operator-provided content to workspace **AGENTS.md** when `H_FRAME_AGENTS_APPEND_FILE` is set (shell env or `.hframe/bootstrap.env`); default H-Frame sync rules are documented in README.
 
 ---
 
 ## Policy model
 
-### Allowlist mode (default from `h-frame-bootstrap`)
+### Allowlist mode (default from `hframe-bootstrap`)
 
 * **Path lines** in **`.hframe/policy.allowlist`** (repo-root-relative globs/paths; see README for directive syntax). Bootstrap seeds one line per **top-level** clone path that Git does not ignore (directories as `name/**`, files as `name`), using **`git check-ignore`** so nested ignore rules apply.
 * **Optional** **`.hframe/policy.denylist`** — user globs merged **after** built-in denies and **before** allow rules. Bootstrap seeds this from the protected clone’s **root `.gitignore`** (pattern lines only; `!` negation omitted).

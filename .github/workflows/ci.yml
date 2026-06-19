@@ -65,7 +65,7 @@ jobs:
           wheel = next(Path("dist").glob("h_frame-*.whl"))
           with zipfile.ZipFile(wheel) as zf:
               names = zf.namelist()
-          assert any(n.endswith("hframe-shim-windows-amd64.exe") for n in names)
+          assert any(n.endswith("h-frame-shim-windows-amd64.exe") for n in names)
           PY
 
   license:

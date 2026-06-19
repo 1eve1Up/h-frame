@@ -1,5 +1,5 @@
 {
-  "name": "hframe",
+  "name": "h-frame",
   "image": "mcr.microsoft.com/devcontainers/python:3.11-bookworm",
   "mounts": [
     "source=${localWorkspaceFolder}/..,target=/workspaces/hframe-root,type=bind,consistency=cached"
