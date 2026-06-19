@@ -1,16 +1,16 @@
-"""Operator CLI: decrypt/encrypt vault policy with ``H_FRAME_VAULT_PASS`` (bootstrap password)."""
+"""Operator CLI: decrypt/encrypt vault policy with ``HFRAME_VAULT_PASS`` (bootstrap password)."""
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
-from hframe.env_vars import H_FRAME_VAULT_PASS
 from hframe.policy_fs import harden_hframe_bundle, permit_policy_vault_rewrite
 from hframe.policy_vault import (
     ALLOW_VAULT_NAME,
     BOOTSTRAP_DEBUG_ENV,
     DENY_VAULT_NAME,
+    VAULT_PASS_ENV,
     assert_vault_password_matches_membrane,
     membrane_vault_key,
     read_vault_file,
@@ -126,8 +126,8 @@ def main(argv: list[str] | None = None) -> int:
     args = list(argv if argv is not None else sys.argv[1:])
     if not args or args[0] not in ("decrypt", "encrypt", "show"):
         sys.stderr.write(
-            f"usage: {H_FRAME_VAULT_PASS}=<pw> ./hframe-vault decrypt|encrypt allowlist|denylist\n"
-            f"       {H_FRAME_VAULT_PASS}=<pw> ./hframe-vault show [allowlist|denylist]\n"
+            f"usage: {VAULT_PASS_ENV}=<pw> ./hframe-vault decrypt|encrypt allowlist|denylist\n"
+            f"       {VAULT_PASS_ENV}=<pw> ./hframe-vault show [allowlist|denylist]\n"
             f"       password: url-safe base64 from {BOOTSTRAP_DEBUG_ENV}=1 bootstrap\n"
             "       ./hframe in|out uses the compiled password (no env needed)\n"
         )

@@ -404,16 +404,16 @@ With remotes removed from the workspace clone, a normal `git push` to upstream i
 
 Bootstrap does **not** write default H-Frame sync rules to workspace `AGENTS.md`; those live under **H-Frame Sync Rules** in this README.
 
-Optionally, bootstrap appends operator-provided agent guidance when `H_FRAME_AGENTS_APPEND_FILE` points at a markdown snippet file. Set it in the shell or in `.hframe/bootstrap.env` (relative paths resolve from the **current working directory** where you run `hframe-bootstrap`; shell exports win over the env file). Legacy `HFRAME_AGENTS_APPEND_FILE` is still accepted.
+Optionally, bootstrap appends operator-provided agent guidance when `HFRAME_AGENTS_APPEND_FILE` points at a markdown snippet file. Set it in the shell or in `.hframe/bootstrap.env` (relative paths resolve from the **current working directory** where you run `hframe-bootstrap`; shell exports win over the env file).
 
 Bootstrap reads `.hframe/bootstrap.env` from the layout directory, the process working directory, or **the parent of the layout directory** (for example `hframe-scratch-workspaces/.hframe/bootstrap.env` while `create-hframe-parent.sh` runs bootstrap inside `podbay-parent/`). Appended content lands in **`<slug>_workspace_repo/AGENTS.md`**, not the bootstrap parent folder.
 
 ```bash
 # Optional: append custom agent rules at bootstrap (snippet one level up from the layout dir)
-H_FRAME_AGENTS_APPEND_FILE='../MYAGENTS.md' hframe-bootstrap 'git@github.com:org/repo.git'
+HFRAME_AGENTS_APPEND_FILE='../MYAGENTS.md' hframe-bootstrap 'git@github.com:org/repo.git'
 
 # Or persist in the scratch workspace (works with create-hframe-parent.sh)
-echo 'H_FRAME_AGENTS_APPEND_FILE=../MYAGENTS.md' >> .hframe/bootstrap.env
+echo 'HFRAME_AGENTS_APPEND_FILE=../MYAGENTS.md' >> .hframe/bootstrap.env
 ./create-hframe-parent.sh 'git@github.com:org/repo.git'
 # then: cat podbay_workspace_repo/AGENTS.md
 ```
@@ -502,7 +502,7 @@ Refresh workspace from canonical repo.
 
 **Policy tamper resistance:** `.hframe/` lives on the bootstrap parent, not in the workspace git tree. Bootstrap sets policy files to **read-only** (`0444` on POSIX). Generated devcontainers mount `../.hframe` **read-only** so agents cannot rewrite allow/deny lists inside the container. Edit policy on the **host** (or temporarily drop the readonly mount)—not via agent prompts. **Git dubious ownership** in containers is handled by the membrane (`safe.directory` per repo); do not widen the allowlist or switch to denylist-only to “fix” git errors.
 
-**Vault mode (optional):** `pip install 'h-frame[vault]'` then `hframe-bootstrap --vault <git-url>` encrypts `policy.allowlist` / `policy.denylist` on disk and compiles a **one-time vault password** into `hframe-membrane.pyz`. `./hframe in|out` uses that compiled password automatically (agents do not need env). Operators edit policy with `./hframe-vault` and `H_FRAME_VAULT_PASS` (see below).
+**Vault mode (optional):** `pip install 'h-frame[vault]'` then `hframe-bootstrap --vault <git-url>` encrypts `policy.allowlist` / `policy.denylist` on disk and compiles a **one-time vault password** into `hframe-membrane.pyz`. `./hframe in|out` uses that compiled password automatically (agents do not need env). Operators edit policy with `./hframe-vault` and `HFRAME_VAULT_PASS` (see below).
 
 #### Manual vault policy edit (decrypt and re-seal)
 
@@ -511,8 +511,8 @@ Refresh workspace from canonical repo.
 To print the password once at bootstrap (save it for later):
 
 ```bash
-H_FRAME_BOOTSTRAP_DEBUG=1 hframe-bootstrap --vault '<git-url>'
-# prints: export H_FRAME_VAULT_PASS='…' for ./hframe-vault
+HFRAME_BOOTSTRAP_DEBUG=1 hframe-bootstrap --vault '<git-url>'
+# prints: export HFRAME_VAULT_PASS='…' for ./hframe-vault
 ```
 
 **During the workspace lifetime**, decrypt/edit/re-encrypt on the **host** (not inside a read-only Dev Container `.hframe` mount):
@@ -520,7 +520,7 @@ H_FRAME_BOOTSTRAP_DEBUG=1 hframe-bootstrap --vault '<git-url>'
 ```bash
 cd /path/to/bootstrap-parent
 source .venv/bin/activate
-export H_FRAME_VAULT_PASS='…'    # url-safe base64 password from bootstrap debug output
+export HFRAME_VAULT_PASS='…'    # url-safe base64 password from bootstrap debug output
 
 ./hframe-vault decrypt allowlist
 # edit .hframe/policy.allowlist.edit
@@ -531,7 +531,7 @@ export H_FRAME_VAULT_PASS='…'    # url-safe base64 password from bootstrap deb
 ./hframe-vault encrypt denylist
 ```
 
-`encrypt` checks that `H_FRAME_VAULT_PASS` matches the password compiled into `hframe-membrane.pyz`, then re-seals the vault file. **`./hframe in|out` does not use `H_FRAME_VAULT_PASS`**—it reads the compiled password from the zipapp.
+`encrypt` checks that `HFRAME_VAULT_PASS` matches the password compiled into `hframe-membrane.pyz`, then re-seals the vault file. **`./hframe in|out` does not use `HFRAME_VAULT_PASS`**—it reads the compiled password from the zipapp.
 
 You do not need to rebuild `hframe-membrane.pyz` after re-seal (same compiled password).
 

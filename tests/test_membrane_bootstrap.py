@@ -6,10 +6,6 @@ from pathlib import Path
 
 import pytest
 
-from hframe.env_vars import (
-    H_FRAME_AGENTS_APPEND_FILE,
-    LEGACY_HFRAME_AGENTS_APPEND_FILE,
-)
 from hframe.membrane_bootstrap import (
     AGENTS_APPEND_FILE_ENV,
     _append_agents_md,
@@ -115,22 +111,6 @@ def test_load_bootstrap_env_sets_unset_keys_only(
     assert os.environ[AGENTS_APPEND_FILE_ENV] == "./from-env-file.md"
     assert os.environ["ALREADY_SET"] == "from-shell"
     os.environ.pop(AGENTS_APPEND_FILE_ENV, None)
-
-
-def test_load_bootstrap_env_normalizes_legacy_agents_key(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    hframe_dir = tmp_path / ".hframe"
-    hframe_dir.mkdir()
-    (hframe_dir / "bootstrap.env").write_text(
-        f"{LEGACY_HFRAME_AGENTS_APPEND_FILE}=./legacy-snippet.md\n",
-        encoding="utf-8",
-    )
-    monkeypatch.delenv(H_FRAME_AGENTS_APPEND_FILE, raising=False)
-    monkeypatch.delenv(LEGACY_HFRAME_AGENTS_APPEND_FILE, raising=False)
-    load_bootstrap_env(tmp_path)
-    assert os.environ[H_FRAME_AGENTS_APPEND_FILE] == "./legacy-snippet.md"
-    os.environ.pop(H_FRAME_AGENTS_APPEND_FILE, None)
 
 
 def test_resolve_agents_append_file_from_bootstrap_env(

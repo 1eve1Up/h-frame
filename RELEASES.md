@@ -8,7 +8,6 @@
 **Production claim:** suitable for **controlled** agent workflows and experimentation—not a substitute for code review, SDLC policy, or execution sandboxing. See [README](README.md) and [PRD](PRD.md).
 
 - **Operator CLI:** console scripts **`hframe-bootstrap`** and **`hframe-vault`** (PyPI package is **`h-frame`**—see ``pyproject.toml`` / README).
-- **Operator env:** canonical **`H_FRAME_*`** variables with legacy **`HFRAME_*``** fallback; ``.hframe/bootstrap.env`` normalizes legacy keys on load.
 - **Windows shim:** prebuilt artifact renamed to **`h-frame-shim-windows-amd64.exe`** in the wheel.
 - **Release CI:** PyPI upload step disabled in [``.github/workflows/publish.yml``](.github/workflows/publish.yml) until Trusted Publisher is configured; tag still runs build, ``twine check``, and tests.
 
@@ -45,7 +44,7 @@
 **Topology / contract:** evolving  
 **Production claim:** suitable for **controlled** agent workflows and experimentation—not a substitute for code review, SDLC policy, or execution sandboxing. See [README](README.md) and [PRD](PRD.md).
 
-- **Agent sync rules:** default H-Frame sync guidance moved from auto-appended workspace ``AGENTS.md`` to README (**H-Frame Sync Rules**). Operators who want workspace-local snippets can set ``H_FRAME_AGENTS_APPEND_FILE`` or ``.hframe/bootstrap.env`` before bootstrap (see README).
+- **Agent sync rules:** default H-Frame sync guidance moved from auto-appended workspace ``AGENTS.md`` to README (**H-Frame Sync Rules**). Operators who want workspace-local snippets can set ``HFRAME_AGENTS_APPEND_FILE`` or ``.hframe/bootstrap.env`` before bootstrap (see README).
 
 ## v2026.5.2
 
@@ -54,7 +53,7 @@
 **Topology / contract:** evolving  
 **Production claim:** suitable for **controlled** agent workflows and experimentation—not a substitute for code review, SDLC policy, or execution sandboxing. See [README](README.md) and [PRD](PRD.md).
 
-- **Policy tamper resistance:** bootstrap sets POSIX ``0444`` on policy artifacts under ``.hframe/``; new devcontainers bind-mount ``../.hframe`` **read-only** (repos stay writable via ``hframe-root``). Optional ``hframe-bootstrap --vault`` encrypts ``policy.allowlist`` / ``policy.denylist`` to ``*.vault`` (plaintext removed) with a one-time key embedded only in ``hframe-membrane.pyz`` (``pip install 'h-frame[vault]'``); installs ``./hframe-vault`` for ``H_FRAME_VAULT_PASS=… ./hframe-vault decrypt|encrypt allowlist|denylist``. **Migration:** existing devcontainers—add ``,readonly`` to the ``.hframe`` mount line (see README).
+- **Policy tamper resistance:** bootstrap sets POSIX ``0444`` on policy artifacts under ``.hframe/``; new devcontainers bind-mount ``../.hframe`` **read-only** (repos stay writable via ``hframe-root``). Optional ``hframe-bootstrap --vault`` encrypts ``policy.allowlist`` / ``policy.denylist`` to ``*.vault`` (plaintext removed) with a one-time key embedded only in ``hframe-membrane.pyz`` (``pip install 'h-frame[vault]'``); installs ``./hframe-vault`` for ``HFRAME_VAULT_PASS=… ./hframe-vault decrypt|encrypt allowlist|denylist``. **Migration:** existing devcontainers—add ``,readonly`` to the ``.hframe`` mount line (see README).
 
 ## v2026.5.1
 

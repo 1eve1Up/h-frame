@@ -12,12 +12,6 @@ from pathlib import Path
 
 from hframe.build_membrane_pyz import build_membrane_pyz
 from hframe.config import MEMBRANE_PYZ_NAME
-from hframe.env_vars import (
-    H_FRAME_AGENTS_APPEND_FILE,
-    LEGACY_HFRAME_AGENTS_APPEND_FILE,
-    env_value,
-    normalize_bootstrap_env_key,
-)
 from hframe.git_ops import assert_no_remotes, clone, remove_all_remotes
 from hframe.gitignore_policy import (
     format_bootstrap_allowlist_body,
@@ -45,7 +39,7 @@ DEFAULT_DENYLIST_TEMPLATE = (
 )
 
 BOOTSTRAP_ENV_REL = Path(".hframe") / "bootstrap.env"
-AGENTS_APPEND_FILE_ENV = H_FRAME_AGENTS_APPEND_FILE
+AGENTS_APPEND_FILE_ENV = "HFRAME_AGENTS_APPEND_FILE"
 
 # Dev Containers: default workspace is only the git repo, so ../.hframe is invisible unless
 # we add bind mounts. Two targets match shim_install.resolve_membrane_pyz (direct + hframe-root).
@@ -138,12 +132,11 @@ def bootstrap_membrane(
     add ``<slug>_workspace_repo/.devcontainer/devcontainer.json`` when missing (Dev
     Container bind mounts for ``../.hframe`` and the bootstrap parent),
     and optionally append operator-provided content to workspace ``AGENTS.md`` when
-    ``H_FRAME_AGENTS_APPEND_FILE`` is set (shell env or ``.hframe/bootstrap.env``;
-    legacy ``HFRAME_AGENTS_APPEND_FILE`` is still accepted).
+    ``HFRAME_AGENTS_APPEND_FILE`` is set (shell env or ``.hframe/bootstrap.env``).
 
     Default H-Frame sync rules are documented in README, not written to ``AGENTS.md``.
 
-    Relative paths in ``H_FRAME_AGENTS_APPEND_FILE`` resolve from the process working
+    Relative paths in ``HFRAME_AGENTS_APPEND_FILE`` resolve from the process working
     directory when bootstrap starts, not from the bootstrap parent layout directory.
 
     ``slug`` is derived from ``git_url`` (see ``repo_slug_from_git_url``).
@@ -280,7 +273,7 @@ def load_bootstrap_env(bootstrap_root: Path, *, cwd: Path | None = None) -> None
     merged: dict[str, str] = {}
     for env_file in candidates:
         for key, value in _parse_bootstrap_env_file(env_file):
-            merged[normalize_bootstrap_env_key(key)] = value
+            merged[key] = value
     for key, value in merged.items():
         if key not in initial_keys:
             os.environ[key] = value
@@ -291,7 +284,7 @@ def resolve_agents_append_file(
 ) -> Path | None:
     """Return the operator snippet path from env, or ``None`` when unset."""
     load_bootstrap_env(bootstrap_root, cwd=cwd)
-    raw = env_value(H_FRAME_AGENTS_APPEND_FILE, LEGACY_HFRAME_AGENTS_APPEND_FILE)
+    raw = os.environ.get(AGENTS_APPEND_FILE_ENV, "").strip()
     if not raw:
         return None
     base = (cwd or Path.cwd()).resolve()
