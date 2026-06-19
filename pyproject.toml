@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "h-frame"
-version = "2026.6.3"
+version = "2026.6.1"
 description = "H-Frame: compile-time repository isolation membrane"
 readme = "README.md"
 requires-python = ">=3.11"
