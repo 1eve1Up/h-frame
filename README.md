@@ -224,7 +224,7 @@ See `RELEASES.md` for release notes and migration guidance.
 
 ## Roadmap
 
-North star: **Portable topology contract (layout + sync semantics + receipts) that agents and CI can assume.** The preview line `v2026.6.0` focuses on local bootstrap and the `in` / `out` membrane; when the contract hardens, expect updates in `RELEASES.md` and the PRD.
+North star: **Portable topology contract (layout + sync semantics + receipts) that agents and CI can assume.** The preview line `v2026.6.1` focuses on local bootstrap and the `in` / `out` membrane; when the contract hardens, expect updates in `RELEASES.md` and the PRD.
 
 Install from PyPI with **`pip install h-frame`** (not `pip install hframe` — that name is a different project).
 

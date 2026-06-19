@@ -2,7 +2,7 @@
 
 Thanks for helping improve H-Frame.
 
-H-Frame is a **repository isolation topology** for AI-assisted delivery: a protected git clone, a workspace copy without remotes, and a small `./hframe` bridge (`in` / `out` only). Keep contributions scoped, tested, and honest about what the membrane guarantees versus what remains operator responsibility (see [README](README.md) and [PRD](PRD.md)). The current release line is **`v2026.6.0`**; the PyPI distribution is **`h-frame`** at version **`2026.6.0`** (see `RELEASES.md` for package-level notes).
+H-Frame is a **repository isolation topology** for AI-assisted delivery: a protected git clone, a workspace copy without remotes, and a small `./hframe` bridge (`in` / `out` only). Keep contributions scoped, tested, and honest about what the membrane guarantees versus what remains operator responsibility (see [README](README.md) and [PRD](PRD.md)). The current release line is **`v2026.6.1`**; the PyPI distribution is **`h-frame`** at version **`2026.6.1`** (see `RELEASES.md` for package-level notes).
 
 ## Prerequisites
 

@@ -1,5 +1,18 @@
 # H-Frame releases
 
+## v2026.6.1
+
+**Date:** June 2026  
+**Stability:** early public preview  
+**Topology / contract:** evolving  
+**Production claim:** suitable for **controlled** agent workflows and experimentation—not a substitute for code review, SDLC policy, or execution sandboxing. See [README](README.md) and [PRD](PRD.md).
+
+- **PyPI:** first publish as distribution **`h-frame`** (``pip install h-frame``; import remains ``hframe``). GitHub: **`1eve1Up/h-frame`**.
+- **Windows shim:** ships prebuilt **`hframe-shim-windows-amd64.exe`** in the wheel (see ``src/hframe/native/prebuilt/``).
+- **Release CI:** tag **`v2026.6.1`** triggers [``.github/workflows/publish.yml``](.github/workflows/publish.yml) (Trusted Publisher on PyPI account **`1eve1Up`**, environment **`pypi`**).
+
+**Packaging note:** The release line is **`v2026.6.1`**. The PyPI distribution is **`h-frame`** at version **`2026.6.1`** (PyPI does not use a `v` prefix). Bump `pyproject.toml` and `src/hframe/__init__.py` together when shipping a new package of this line.
+
 ## v2026.6.0
 
 **Date:** June 2026  
@@ -8,10 +21,6 @@
 **Production claim:** suitable for **controlled** agent workflows and experimentation—not a substitute for code review, SDLC policy, or execution sandboxing. See [README](README.md) and [PRD](PRD.md).
 
 - **Agent sync rules:** default H-Frame sync guidance moved from auto-appended workspace ``AGENTS.md`` to README (**H-Frame Sync Rules**). Operators who want workspace-local snippets can set ``HFRAME_AGENTS_APPEND_FILE`` or ``.hframe/bootstrap.env`` before bootstrap (see README).
-
-**Packaging note:** The release line is **`v2026.6.0`**. The PyPI distribution is **`h-frame`** at version **`2026.6.0`** (PyPI does not use a `v` prefix). GitHub: **`1eve1Up/h-frame`**. Bump `pyproject.toml` and `src/hframe/__init__.py` together when shipping a new package of this line.
-
-**PyPI publish (maintainers):** account **`1eve1Up`**, project **`h-frame`**. Configure a [Trusted Publisher](https://docs.pypi.org/trusted-publishers/) on PyPI: owner `1eve1Up`, repository `h-frame`, workflow `.github/workflows/publish.yml`, environment `pypi`. Push tag **`v2026.6.0`** to run the publish workflow.
 
 ## v2026.5.2
 

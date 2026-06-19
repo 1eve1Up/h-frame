@@ -2,9 +2,9 @@
 
 ## Supported versions
 
-H-Frame is in **early public preview**. The documented preview line is **`v2026.6.0`** (see [README](README.md) — Release and stability, and [RELEASES.md](RELEASES.md)).
+H-Frame is in **early public preview**. The documented preview line is **`v2026.6.1`** (see [README](README.md) — Release and stability, and [RELEASES.md](RELEASES.md)).
 
-Security-sensitive fixes are prioritized for **current `main`** and the latest **published Python package** on PyPI (`h-frame`, version **`2026.6.0`** in `pyproject.toml`, release line **`v2026.6.0`** in docs).
+Security-sensitive fixes are prioritized for **current `main`** and the latest **published Python package** on PyPI (`h-frame`, version **`2026.6.1`** in `pyproject.toml`, release line **`v2026.6.1`** in docs).
 
 Until an explicit stable commitment:
 
