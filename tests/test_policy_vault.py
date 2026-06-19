@@ -6,11 +6,9 @@ import pytest
 
 cryptography = pytest.importorskip("cryptography")
 
-from hframe.env_vars import (
-    H_FRAME_AGENTS_APPEND_FILE,
+from hframe.env_vars import (  # noqa: E402
     H_FRAME_BOOTSTRAP_DEBUG,
     H_FRAME_VAULT_PASS,
-    LEGACY_HFRAME_AGENTS_APPEND_FILE,
     LEGACY_HFRAME_BOOTSTRAP_DEBUG,
     LEGACY_HFRAME_VAULT_PASS,
 )
