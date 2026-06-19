@@ -1,4 +1,4 @@
-# Prebuilt `hframe` Windows shim (optional)
+# Prebuilt `hframe` Windows shim
 
 Bootstrap installs the workspace bridge as follows:
 
@@ -9,13 +9,21 @@ Bootstrap installs the workspace bridge as follows:
 
 ## Windows file name
 
-Place a **chmod +x** is not applicable for `.exe`; ship the file as:
-
 | Tag | File |
 |-----|------|
 | Windows x64 | `hframe-shim-windows-amd64.exe` |
 
 Tags are chosen from `platform.machine()` and `sys.platform` at bootstrap time.
+
+## Rebuilding the Windows shim
+
+Source: [`../shim_windows.c`](../shim_windows.c). From the repository root (requires `gcc-mingw-w64-x86-64` on Linux, or MSVC on Windows):
+
+```bash
+bash tools/build_windows_shim.sh
+```
+
+The resulting executable must be committed under this directory before publishing the `h-frame` wheel.
 
 ## Reference native launcher (POSIX)
 

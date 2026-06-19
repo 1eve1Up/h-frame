@@ -11,7 +11,7 @@ labels: []
 
 ## Environment
 
-- **H-Frame version:** `2026.5.0` / preview line `v2026.5.0` (see `pyproject.toml` / `pip show hframe`)
+- **H-Frame version:** `2026.6.0` / preview line `v2026.6.0` (see `pyproject.toml` / `pip show h-frame`)
 - **OS:**
 - **Python** (bootstrap / membrane build):
 - **git** / **rsync** versions:

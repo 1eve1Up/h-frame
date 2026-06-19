@@ -1,5 +1,8 @@
 # H-Frame
 
+[![PyPI](https://img.shields.io/pypi/v/h-frame)](https://pypi.org/project/h-frame/)
+[![Python](https://img.shields.io/pypi/pyversions/h-frame)](https://pypi.org/project/h-frame/)
+
 H-Frame is a **repository isolation topology for AI-assisted software delivery**.
 
 H-Frame assumes something many current agentic frameworks still avoid admitting:
@@ -221,7 +224,9 @@ See `RELEASES.md` for release notes and migration guidance.
 
 ## Roadmap
 
-North star: **Portable topology contract (layout + sync semantics + receipts) that agents and CI can assume.** The preview line `v2026.5.0` focuses on local bootstrap and the `in` / `out` membrane; when the contract hardens, expect updates in `RELEASES.md` and the PRD.
+North star: **Portable topology contract (layout + sync semantics + receipts) that agents and CI can assume.** The preview line `v2026.6.0` focuses on local bootstrap and the `in` / `out` membrane; when the contract hardens, expect updates in `RELEASES.md` and the PRD.
+
+Install from PyPI with **`pip install h-frame`** (not `pip install hframe` — that name is a different project).
 
 ## Telemetry
 
@@ -300,7 +305,13 @@ Requirements:
 * rsync
 * On **Windows**, a prebuilt `hframe-shim-windows-amd64.exe` under `hframe/native/prebuilt/` in the installed wheel (operators building from source must supply it; see `src/hframe/native/prebuilt/README.md`)
 
-Install:
+Install from PyPI (operators):
+
+```bash
+pip install h-frame
+```
+
+From a clone:
 
 ```bash
 pip install -e .
@@ -463,11 +474,11 @@ The first line exposes the full bootstrap parent at `/workspaces/hframe-root/` (
 **Upgrading the workspace ``./hframe`` script in a devcontainer:** the one-liner that calls ``install_workspace_shim`` imports the **``hframe``** Python package. Install it in the same container (agents do not use a global install for sync, but **operators** need it here to rewrite ``./hframe``):
 
 ```bash
-pip install hframe
+pip install h-frame
 python3 -c "from pathlib import Path; from hframe.shim_install import install_workspace_shim; install_workspace_shim(Path('hframe').resolve())"
 ```
 
-Or use ``pip install -e /path/to/H-Frame`` from a clone. You can add ``pip install hframe`` to ``postCreateCommand`` next to ``go mod download`` if you want this to happen automatically.
+Or use ``pip install -e /path/to/h-frame`` from a clone. You can add ``pip install h-frame`` to ``postCreateCommand`` next to ``go mod download`` if you want this to happen automatically.
 
 **Verify the membrane exists in the container** (after fixing mounts):
 
@@ -491,7 +502,7 @@ Refresh workspace from canonical repo.
 
 **Policy tamper resistance:** `.hframe/` lives on the bootstrap parent, not in the workspace git tree. Bootstrap sets policy files to **read-only** (`0444` on POSIX). Generated devcontainers mount `../.hframe` **read-only** so agents cannot rewrite allow/deny lists inside the container. Edit policy on the **host** (or temporarily drop the readonly mount)—not via agent prompts. **Git dubious ownership** in containers is handled by the membrane (`safe.directory` per repo); do not widen the allowlist or switch to denylist-only to “fix” git errors.
 
-**Vault mode (optional):** `pip install 'hframe[vault]'` then `hframe-bootstrap --vault <git-url>` encrypts `policy.allowlist` / `policy.denylist` on disk and compiles a **one-time vault password** into `hframe-membrane.pyz`. `./hframe in|out` uses that compiled password automatically (agents do not need env). Operators edit policy with `./hframe-vault` and `HFRAME_VAULT_PASS` (see below).
+**Vault mode (optional):** `pip install 'h-frame[vault]'` then `hframe-bootstrap --vault <git-url>` encrypts `policy.allowlist` / `policy.denylist` on disk and compiles a **one-time vault password** into `hframe-membrane.pyz`. `./hframe in|out` uses that compiled password automatically (agents do not need env). Operators edit policy with `./hframe-vault` and `HFRAME_VAULT_PASS` (see below).
 
 #### Manual vault policy edit (decrypt and re-seal)
 
@@ -524,7 +535,7 @@ export HFRAME_VAULT_PASS='…'    # url-safe base64 password from bootstrap debu
 
 You do not need to rebuild `hframe-membrane.pyz` after re-seal (same compiled password).
 
-Install: `pip install -e '/path/to/H-Frame[vault]'`. Policy line syntax: [PRD.md](PRD.md).
+Install: `pip install -e '/path/to/h-frame[vault]'`. Policy line syntax: [PRD.md](PRD.md).
 
 **Policy + `rsync --delete`:** behavior is defined by `../.hframe/policy.allowlist` (or vault blobs when `--vault` was used; see [PRD.md](PRD.md) policy model). **`hframe-bootstrap`** seeds **allowlist** mode by default: **one pattern per repo-root path** that Git does not ignore (via `git check-ignore`), directories as `name/**` and files by basename. **`.hframe/policy.denylist`** is still filled from the protected clone’s root **`.gitignore`** (minus `!` lines) and is merged **after** built-in denies, so ignored subtrees stay out of the sync surface. **`.git/`** and the repo-root **`./hframe`** launcher are never mirrored. If no root paths qualify (edge case), bootstrap writes **denylist-only** instead. For a full-tree sync except denies, replace `policy.allowlist` with the denylist-only directive (README).
 

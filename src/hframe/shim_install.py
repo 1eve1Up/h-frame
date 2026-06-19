@@ -133,7 +133,7 @@ def _main() -> int:
             "workspaces bootstrapped without an existing .devcontainer get one "
             "with the needed mounts.\\n"
             "To refresh this launcher, install the hframe package in this environment "
-            "(pip install hframe) then run the install_workspace_shim one-liner from README "
+            "(pip install h-frame) then run the install_workspace_shim one-liner from README "
             "Devcontainers.\\n"
         )
         return 2

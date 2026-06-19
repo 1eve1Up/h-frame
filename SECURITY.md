@@ -2,9 +2,9 @@
 
 ## Supported versions
 
-H-Frame is in **early public preview**. The documented preview line is **`v2026.5.0`** (see [README](README.md) — Release and stability, and [RELEASES.md](RELEASES.md)).
+H-Frame is in **early public preview**. The documented preview line is **`v2026.6.0`** (see [README](README.md) — Release and stability, and [RELEASES.md](RELEASES.md)).
 
-Security-sensitive fixes are prioritized for **current `main`** and the latest **published Python package** on PyPI (`hframe`, version **`2026.5.0`** in `pyproject.toml`, release line **`v2026.5.0`** in docs).
+Security-sensitive fixes are prioritized for **current `main`** and the latest **published Python package** on PyPI (`h-frame`, version **`2026.6.0`** in `pyproject.toml`, release line **`v2026.6.0`** in docs).
 
 Until an explicit stable commitment:
 
@@ -22,7 +22,7 @@ Preferred channels:
 
 Include where possible:
 
-- affected **`hframe` package version** (`pyproject.toml` / `pip show hframe`) or **git commit**
+- affected **`h-frame` package version** (`pyproject.toml` / `pip show h-frame`) or **git commit**
 - OS and versions of **git**, **rsync**, and **Python**
 - whether the report concerns **operator** (`hframe-bootstrap`) or **agent** (`./hframe`) surfaces
 - minimal reproduction steps and impact assessment (no live customer secrets)

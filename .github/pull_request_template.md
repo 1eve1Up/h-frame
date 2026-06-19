@@ -15,4 +15,4 @@
 
 ## Release / version
 
-Current release line: **`v2026.5.0`** (see `pyproject.toml` and [RELEASES.md](../RELEASES.md)).
+Current release line: **`v2026.6.0`** (see `pyproject.toml` and [RELEASES.md](../RELEASES.md)).

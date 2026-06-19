@@ -12,4 +12,5 @@
 .factimonious/
 .ghostship/
 build/
+dist/
 scancode-license-report.json

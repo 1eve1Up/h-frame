@@ -9,6 +9,10 @@
 
 - **Agent sync rules:** default H-Frame sync guidance moved from auto-appended workspace ``AGENTS.md`` to README (**H-Frame Sync Rules**). Operators who want workspace-local snippets can set ``HFRAME_AGENTS_APPEND_FILE`` or ``.hframe/bootstrap.env`` before bootstrap (see README).
 
+**Packaging note:** The release line is **`v2026.6.0`**. The PyPI distribution is **`h-frame`** at version **`2026.6.0`** (PyPI does not use a `v` prefix). GitHub: **`1eve1Up/h-frame`**. Bump `pyproject.toml` and `src/hframe/__init__.py` together when shipping a new package of this line.
+
+**PyPI publish (maintainers):** account **`1eve1Up`**, project **`h-frame`**. Configure a [Trusted Publisher](https://docs.pypi.org/trusted-publishers/) on PyPI: owner `1eve1Up`, repository `h-frame`, workflow `.github/workflows/publish.yml`, environment `pypi`. Push tag **`v2026.6.0`** to run the publish workflow.
+
 ## v2026.5.2
 
 **Date:** May 2026  
@@ -69,7 +73,7 @@ pytest
 Operator install (bootstrap only; agents use `./hframe` in the workspace):
 
 ```bash
-pip install hframe
+pip install h-frame
 # or from clone:
 pip install -e .
 ```
