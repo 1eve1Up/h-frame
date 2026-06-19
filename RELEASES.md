@@ -9,7 +9,7 @@
 
 - **PyPI:** first publish as distribution **`h-frame`** (``pip install h-frame``; import remains ``hframe``; executables remain ``hframe-bootstrap`` / ``hframe-vault``—see ``pyproject.toml``). GitHub: **`1eve1Up/h-frame`**.
 - **Windows shim:** prebuilt **`h-frame-shim-windows-amd64.exe`** in the wheel (see ``src/hframe/native/prebuilt/``).
-- **Release CI:** tag **`v2026.6.1`** runs build, ``twine check``, and tests via [``.github/workflows/publish.yml``](.github/workflows/publish.yml). PyPI upload stays off until Trusted Publisher is configured on account **`1eve1Up`**.
+- **Release CI:** tag **`v2026.6.1`** runs build, ``twine check``, tests, and PyPI upload via [``.github/workflows/publish.yml``](.github/workflows/publish.yml) (Trusted Publisher on account **`1eve1Up`**, environment **`pypi`**).
 
 **Packaging note:** The release line is **`v2026.6.1`**. The PyPI distribution is **`h-frame`** at version **`2026.6.1`**. Push tag **`v2026.6.1`** to run the release workflow.
 
