@@ -226,8 +226,6 @@ See `RELEASES.md` for release notes and migration guidance.
 
 North star: **Portable topology contract (layout + sync semantics + receipts) that agents and CI can assume.** The preview line `v2026.6.3` focuses on local bootstrap and the `in` / `out` membrane; when the contract hardens, expect updates in `RELEASES.md` and the PRD.
 
-Install from PyPI with **`pip install h-frame`** (not `pip install hframe` — that name is a different project).
-
 ## Telemetry
 
 **H-Frame does not ship telemetry.** `hframe-bootstrap`, the workspace `./hframe` shim, and the bundled membrane do not send usage analytics or “phone home.” Network use is limited to what **you** invoke (for example `git clone` / `git pull` / `git push` against remotes you configure). If you wrap or redistribute H-Frame, outbound behavior from your wrapper is outside this project’s scope.
@@ -310,6 +308,8 @@ Install from PyPI (operators):
 ```bash
 pip install h-frame
 ```
+
+Due to PyPI namespace availability, the package is published as **`h-frame`**, but the executable remains **`hframe`**.
 
 From a clone:
 

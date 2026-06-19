@@ -7,7 +7,7 @@
 **Topology / contract:** evolving  
 **Production claim:** suitable for **controlled** agent workflows and experimentation—not a substitute for code review, SDLC policy, or execution sandboxing. See [README](README.md) and [PRD](PRD.md).
 
-- **Operator CLI:** console scripts **`hframe-bootstrap`** and **`hframe-vault`** (PyPI distribution remains **`h-frame`**; PATH entry points align with ``import hframe`` and on-disk topology—see comment in ``pyproject.toml``).
+- **Operator CLI:** console scripts **`hframe-bootstrap`** and **`hframe-vault`** (PyPI package is **`h-frame`**—see ``pyproject.toml`` / README).
 - **Operator env:** canonical **`H_FRAME_*`** variables with legacy **`HFRAME_*``** fallback; ``.hframe/bootstrap.env`` normalizes legacy keys on load.
 - **Windows shim:** prebuilt artifact renamed to **`h-frame-shim-windows-amd64.exe`** in the wheel.
 - **Release CI:** PyPI upload step disabled in [``.github/workflows/publish.yml``](.github/workflows/publish.yml) until Trusted Publisher is configured; tag still runs build, ``twine check``, and tests.
