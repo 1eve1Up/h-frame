@@ -110,7 +110,7 @@ def membrane_directory_names(git_url: str) -> tuple[str, str]:
 def _require_vault_cli_installed() -> None:
     if importlib.util.find_spec("hframe.vault_cli") is None:
         raise RuntimeError(
-            "hframe-bootstrap --vault requires hframe.vault_cli in the active Python "
+            "h-frame-bootstrap --vault requires hframe.vault_cli in the active Python "
             f"({sys.executable}). Install from a current tree, e.g.\n"
             "  pip install -e '/path/to/H-Frame[vault]'\n"
             "Then re-run bootstrap."

@@ -29,6 +29,13 @@ def test_pyproject_distribution_name() -> None:
     assert data["project"]["name"] == "h-frame"
 
 
+def test_bootstrap_console_script_name() -> None:
+    data = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
+    scripts = data["project"]["scripts"]
+    assert "h-frame-bootstrap" in scripts
+    assert "hframe-bootstrap" not in scripts
+
+
 def test_windows_shim_prebuilt_exists() -> None:
     assert PREBUILT_EXE.is_file(), f"missing prebuilt Windows shim: {PREBUILT_EXE}"
 

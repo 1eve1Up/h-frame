@@ -180,11 +180,11 @@ def install_bootstrap_vault_cli(bootstrap_root: Path) -> Path:
     """
     Install ``<bootstrap-root>/hframe-vault`` for operator policy decrypt/re-seal.
 
-    Requires ``hframe[vault]`` in the operator Python environment (same as bootstrap).
+    Requires ``h-frame[vault]`` in the operator Python environment (same as bootstrap).
     """
     if sys.platform == "win32":
         raise RuntimeError(
-            "hframe-bootstrap --vault: hframe-vault operator script is POSIX-only; "
+            "h-frame-bootstrap --vault: hframe-vault operator script is POSIX-only; "
             "use Python snippets in README on Windows."
         )
     dest = bootstrap_root.resolve() / "hframe-vault"
@@ -218,9 +218,9 @@ def install_workspace_shim(dest: Path) -> None:
 
     if not tag:
         raise RuntimeError(
-            "hframe-bootstrap: unsupported Windows machine type for prebuilt shims."
+            "h-frame-bootstrap: unsupported Windows machine type for prebuilt shims."
         )
     raise RuntimeError(
-        "hframe-bootstrap: no prebuilt Windows shim (hframe-shim-"
+        "h-frame-bootstrap: no prebuilt Windows shim (hframe-shim-"
         f"{tag}.exe). Add it under hframe/native/prebuilt/; see native/prebuilt/README.md."
     )

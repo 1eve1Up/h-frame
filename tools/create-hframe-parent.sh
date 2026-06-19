@@ -25,7 +25,7 @@ python -m pip install -e "${HFRAME_SRC}[vault]"
 python -c "import hframe.vault_cli"
 
 export HFRAME_BOOTSTRAP_DEBUG=1
-hframe-bootstrap --vault "$GIT_URL"
+h-frame-bootstrap --vault "$GIT_URL"
 
 echo ""
 echo "Bootstrap parent: $(pwd)"

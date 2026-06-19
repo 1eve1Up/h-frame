@@ -23,7 +23,7 @@ def require_cryptography():
     except ImportError as e:
         raise ImportError(
             "policy vault requires the cryptography package; "
-            "install with: pip install 'hframe[vault]'"
+            "install with: pip install 'h-frame[vault]'"
         ) from e
     return AESGCM
 
@@ -52,7 +52,7 @@ def emit_vault_password_debug(key: bytes) -> None:
     if not bootstrap_debug_enabled():
         return
     sys.stdout.write(
-        "hframe-bootstrap: vault password "
+        "h-frame-bootstrap: vault password "
         f"(export {VAULT_PASS_ENV}={key_to_b64(key)!r} for ./hframe-vault)\n"
     )
     sys.stdout.flush()

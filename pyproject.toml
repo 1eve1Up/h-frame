@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "h-frame"
-version = "2026.6.1"
+version = "2026.6.2"
 description = "H-Frame: compile-time repository isolation membrane"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -45,7 +45,7 @@ dev = [
 ]
 
 [project.scripts]
-hframe-bootstrap = "hframe.bootstrap_cli:main"
+h-frame-bootstrap = "hframe.bootstrap_cli:main"
 hframe-vault = "hframe.vault_cli:main"
 
 [tool.setuptools.packages.find]

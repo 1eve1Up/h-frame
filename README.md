@@ -224,13 +224,13 @@ See `RELEASES.md` for release notes and migration guidance.
 
 ## Roadmap
 
-North star: **Portable topology contract (layout + sync semantics + receipts) that agents and CI can assume.** The preview line `v2026.6.1` focuses on local bootstrap and the `in` / `out` membrane; when the contract hardens, expect updates in `RELEASES.md` and the PRD.
+North star: **Portable topology contract (layout + sync semantics + receipts) that agents and CI can assume.** The preview line `v2026.6.2` focuses on local bootstrap and the `in` / `out` membrane; when the contract hardens, expect updates in `RELEASES.md` and the PRD.
 
 Install from PyPI with **`pip install h-frame`** (not `pip install hframe` — that name is a different project).
 
 ## Telemetry
 
-**H-Frame does not ship telemetry.** `hframe-bootstrap`, the workspace `./hframe` shim, and the bundled membrane do not send usage analytics or “phone home.” Network use is limited to what **you** invoke (for example `git clone` / `git pull` / `git push` against remotes you configure). If you wrap or redistribute H-Frame, outbound behavior from your wrapper is outside this project’s scope.
+**H-Frame does not ship telemetry.** `h-frame-bootstrap`, the workspace `./hframe` shim, and the bundled membrane do not send usage analytics or “phone home.” Network use is limited to what **you** invoke (for example `git clone` / `git pull` / `git push` against remotes you configure). If you wrap or redistribute H-Frame, outbound behavior from your wrapper is outside this project’s scope.
 
 ---
 
@@ -325,7 +325,7 @@ pip install -e '.[dev]'
 
 This installs:
 
-* `hframe-bootstrap`
+* `h-frame-bootstrap`
 
 Agents do **not** globally install H-Frame.
 
@@ -342,7 +342,7 @@ inside the workspace only.
 From a parent directory:
 
 ```bash
-hframe-bootstrap 'git@github.com:org/repo.git'
+h-frame-bootstrap 'git@github.com:org/repo.git'
 ```
 
 Exactly one argument is accepted:
@@ -404,13 +404,13 @@ With remotes removed from the workspace clone, a normal `git push` to upstream i
 
 Bootstrap does **not** write default H-Frame sync rules to workspace `AGENTS.md`; those live under **H-Frame Sync Rules** in this README.
 
-Optionally, bootstrap appends operator-provided agent guidance when `HFRAME_AGENTS_APPEND_FILE` points at a markdown snippet file. Set it in the shell or in `.hframe/bootstrap.env` (relative paths resolve from the **current working directory** where you run `hframe-bootstrap`; shell exports win over the env file).
+Optionally, bootstrap appends operator-provided agent guidance when `HFRAME_AGENTS_APPEND_FILE` points at a markdown snippet file. Set it in the shell or in `.hframe/bootstrap.env` (relative paths resolve from the **current working directory** where you run `h-frame-bootstrap`; shell exports win over the env file).
 
 Bootstrap reads `.hframe/bootstrap.env` from the layout directory, the process working directory, or **the parent of the layout directory** (for example `hframe-scratch-workspaces/.hframe/bootstrap.env` while `create-hframe-parent.sh` runs bootstrap inside `podbay-parent/`). Appended content lands in **`<slug>_workspace_repo/AGENTS.md`**, not the bootstrap parent folder.
 
 ```bash
 # Optional: append custom agent rules at bootstrap (snippet one level up from the layout dir)
-HFRAME_AGENTS_APPEND_FILE='../MYAGENTS.md' hframe-bootstrap 'git@github.com:org/repo.git'
+HFRAME_AGENTS_APPEND_FILE='../MYAGENTS.md' h-frame-bootstrap 'git@github.com:org/repo.git'
 
 # Or persist in the scratch workspace (works with create-hframe-parent.sh)
 echo 'HFRAME_AGENTS_APPEND_FILE=../MYAGENTS.md' >> .hframe/bootstrap.env
@@ -446,7 +446,7 @@ The launcher:
 
 ## 6. Devcontainers
 
-`./hframe` looks for the membrane at **`<bootstrap-parent>/.hframe/hframe-membrane.pyz`**, where `<bootstrap-parent>` is the directory that also contains `<slug>_workspace_repo/` (the same layout `hframe-bootstrap` creates next to `.hframe/`).
+`./hframe` looks for the membrane at **`<bootstrap-parent>/.hframe/hframe-membrane.pyz`**, where `<bootstrap-parent>` is the directory that also contains `<slug>_workspace_repo/` (the same layout `h-frame-bootstrap` creates next to `.hframe/`).
 
 Many devcontainers mount **only** the workspace git repository, so `../.hframe/` does not exist inside the container and `./hframe` fails. H-Frame does not try to infer every host layout; you must **bind-mount** the bootstrap parent and/or `.hframe` into the container filesystem the launcher can see.
 
@@ -461,7 +461,7 @@ Many devcontainers mount **only** the workspace git repository, so `../.hframe/`
 
 The first line exposes the full bootstrap parent at `/workspaces/hframe-root/` (protected clone, workspace sibling, `.hframe/`). The second maps **only** `../.hframe` to **`/workspaces/.hframe/`**, which matches the launcher’s first probe when the workspace parent is `/workspaces`.
 
-**After `hframe-bootstrap`:** if `<slug>_workspace_repo/.devcontainer/devcontainer.json` was **missing**, bootstrap writes the snippet above (plus a minimal `image`) into that path. Review, commit, or replace as you like.
+**After `h-frame-bootstrap`:** if `<slug>_workspace_repo/.devcontainer/devcontainer.json` was **missing**, bootstrap writes the snippet above (plus a minimal `image`) into that path. Review, commit, or replace as you like.
 
 **If the workspace already had `.devcontainer/devcontainer.json`:** bootstrap **does not** overwrite or merge it. Add the same two `mounts` entries to your existing file (merge into the top-level `mounts` array), then **rebuild** the dev container so `./hframe` can see the zipapp.
 
@@ -469,7 +469,7 @@ The first line exposes the full bootstrap parent at `/workspaces/hframe-root/` (
 
 **Python versions:** the membrane zipapp ships **source** (``.py``) under ``.hframe/``, not minor-locked bytecode, so the same file runs under any ``python3`` that satisfies H-Frame’s ``requires-python`` (for example bootstrap on **3.11** and a devcontainer on **3.12**). Bootstrap still uses ``compileall`` only to **verify** the tree compiles on the operator interpreter before writing the zipapp.
 
-**Host vs Dev Container paths:** the membrane embeds **paths relative to the bootstrap parent** (the directory that contains ``<slug>_repo/``, ``<slug>_workspace_repo/``, and ``.hframe/``). At runtime it re-resolves them from the zipapp location and, if needed, from ``/workspaces/hframe-root`` so the **same** ``hframe-membrane.pyz`` built on the host (for example macOS) still finds the repos after you open the workspace in a Linux dev container with the mounts above. **Regenerate** ``.hframe/hframe-membrane.pyz`` once after upgrading to a build that includes this behavior (re-run ``hframe-bootstrap`` on a fresh parent, or rebuild the zipapp from an installed ``hframe`` if you have a custom pipeline). Older zipapps that embed only absolute paths keep working on the machine where they were built.
+**Host vs Dev Container paths:** the membrane embeds **paths relative to the bootstrap parent** (the directory that contains ``<slug>_repo/``, ``<slug>_workspace_repo/``, and ``.hframe/``). At runtime it re-resolves them from the zipapp location and, if needed, from ``/workspaces/hframe-root`` so the **same** ``hframe-membrane.pyz`` built on the host (for example macOS) still finds the repos after you open the workspace in a Linux dev container with the mounts above. **Regenerate** ``.hframe/hframe-membrane.pyz`` once after upgrading to a build that includes this behavior (re-run ``h-frame-bootstrap`` on a fresh parent, or rebuild the zipapp from an installed ``hframe`` if you have a custom pipeline). Older zipapps that embed only absolute paths keep working on the machine where they were built.
 
 **Upgrading the workspace ``./hframe`` script in a devcontainer:** the one-liner that calls ``install_workspace_shim`` imports the **``hframe``** Python package. Install it in the same container (agents do not use a global install for sync, but **operators** need it here to rewrite ``./hframe``):
 
@@ -502,16 +502,16 @@ Refresh workspace from canonical repo.
 
 **Policy tamper resistance:** `.hframe/` lives on the bootstrap parent, not in the workspace git tree. Bootstrap sets policy files to **read-only** (`0444` on POSIX). Generated devcontainers mount `../.hframe` **read-only** so agents cannot rewrite allow/deny lists inside the container. Edit policy on the **host** (or temporarily drop the readonly mount)—not via agent prompts. **Git dubious ownership** in containers is handled by the membrane (`safe.directory` per repo); do not widen the allowlist or switch to denylist-only to “fix” git errors.
 
-**Vault mode (optional):** `pip install 'h-frame[vault]'` then `hframe-bootstrap --vault <git-url>` encrypts `policy.allowlist` / `policy.denylist` on disk and compiles a **one-time vault password** into `hframe-membrane.pyz`. `./hframe in|out` uses that compiled password automatically (agents do not need env). Operators edit policy with `./hframe-vault` and `HFRAME_VAULT_PASS` (see below).
+**Vault mode (optional):** `pip install 'h-frame[vault]'` then `h-frame-bootstrap --vault <git-url>` encrypts `policy.allowlist` / `policy.denylist` on disk and compiles a **one-time vault password** into `hframe-membrane.pyz`. `./hframe in|out` uses that compiled password automatically (agents do not need env). Operators edit policy with `./hframe-vault` and `HFRAME_VAULT_PASS` (see below).
 
 #### Manual vault policy edit (decrypt and re-seal)
 
-**Bootstrap** (`hframe-bootstrap --vault`) generates a random vault password, encrypts policy files, embeds the password in `hframe-membrane.pyz`, and installs `./hframe-vault` on the bootstrap parent.
+**Bootstrap** (`h-frame-bootstrap --vault`) generates a random vault password, encrypts policy files, embeds the password in `hframe-membrane.pyz`, and installs `./hframe-vault` on the bootstrap parent.
 
 To print the password once at bootstrap (save it for later):
 
 ```bash
-HFRAME_BOOTSTRAP_DEBUG=1 hframe-bootstrap --vault '<git-url>'
+HFRAME_BOOTSTRAP_DEBUG=1 h-frame-bootstrap --vault '<git-url>'
 # prints: export HFRAME_VAULT_PASS='…' for ./hframe-vault
 ```
 
@@ -537,7 +537,7 @@ You do not need to rebuild `hframe-membrane.pyz` after re-seal (same compiled pa
 
 Install: `pip install -e '/path/to/h-frame[vault]'`. Policy line syntax: [PRD.md](PRD.md).
 
-**Policy + `rsync --delete`:** behavior is defined by `../.hframe/policy.allowlist` (or vault blobs when `--vault` was used; see [PRD.md](PRD.md) policy model). **`hframe-bootstrap`** seeds **allowlist** mode by default: **one pattern per repo-root path** that Git does not ignore (via `git check-ignore`), directories as `name/**` and files by basename. **`.hframe/policy.denylist`** is still filled from the protected clone’s root **`.gitignore`** (minus `!` lines) and is merged **after** built-in denies, so ignored subtrees stay out of the sync surface. **`.git/`** and the repo-root **`./hframe`** launcher are never mirrored. If no root paths qualify (edge case), bootstrap writes **denylist-only** instead. For a full-tree sync except denies, replace `policy.allowlist` with the denylist-only directive (README).
+**Policy + `rsync --delete`:** behavior is defined by `../.hframe/policy.allowlist` (or vault blobs when `--vault` was used; see [PRD.md](PRD.md) policy model). **`h-frame-bootstrap`** seeds **allowlist** mode by default: **one pattern per repo-root path** that Git does not ignore (via `git check-ignore`), directories as `name/**` and files by basename. **`.hframe/policy.denylist`** is still filled from the protected clone’s root **`.gitignore`** (minus `!` lines) and is merged **after** built-in denies, so ignored subtrees stay out of the sync surface. **`.git/`** and the repo-root **`./hframe`** launcher are never mirrored. If no root paths qualify (edge case), bootstrap writes **denylist-only** instead. For a full-tree sync except denies, replace `policy.allowlist` with the denylist-only directive (README).
 
 The membrane zipapp path is fixed relative to the workspace (see **Devcontainers** above).
 
@@ -581,7 +581,7 @@ than:
 ## Operator
 
 ```bash
-hframe-bootstrap 'git@github.com:org/repo.git'
+h-frame-bootstrap 'git@github.com:org/repo.git'
 ```
 
 ---

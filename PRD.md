@@ -170,7 +170,7 @@ Sibling of the two repos under the same parent:
 
 * **`policy.allowlist`** — default from bootstrap: **allowlist** path lines, one per **non-ignored** top-level entry in the protected clone (see `git check-ignore` in implementation), unless none qualify (then **denylist-only** fallback). Operators may replace or edit on the **host** (not from agent prompts).
 * **`policy.denylist`** — extra deny globs merged **after** built-in denies. On a fresh bootstrap (when this file did not exist beforehand), it is **seeded from the protected clone’s root `.gitignore`** (pattern lines only; `!` negation lines are omitted).
-* **`policy.allowlist.vault` / `policy.denylist.vault`** — when bootstrap uses **`--vault`**, plaintext policy files are removed after encryption; decryption key is embedded only in the zipapp (optional `hframe[vault]` dependency).
+* **`policy.allowlist.vault` / `policy.denylist.vault`** — when bootstrap uses **`--vault`**, plaintext policy files are removed after encryption; decryption key is embedded only in the zipapp (optional `h-frame[vault]` dependency).
 * **`hframe-membrane.pyz`** — source zipapp built at bootstrap; embeds **paths relative to the bootstrap parent** (plus runtime resolution so the same bundle can run in Dev Containers when the parent is bind-mounted).
 * **POSIX modes:** bootstrap sets policy artifacts to `0444` and `.hframe/` to `0755` where supported.
 * Optional templates / docs as shipped by bootstrap.
@@ -181,14 +181,14 @@ Sibling of the two repos under the same parent:
 
 ## Membrane appliance model
 
-### Operator surface: `hframe-bootstrap`
+### Operator surface: `h-frame-bootstrap`
 
 ```bash
-hframe-bootstrap [--vault] '<git_url>'
+h-frame-bootstrap [--vault] '<git_url>'
 ```
 
 * **Exactly one argument:** the git URL to clone.
-* **`--vault` (optional):** encrypt policy on disk; key embedded only in the membrane zipapp (`pip install 'hframe[vault]'`).
+* **`--vault` (optional):** encrypt policy on disk; key embedded only in the membrane zipapp (`pip install 'h-frame[vault]'`).
 * No other flags on the operator surface for the standard agent workflow.
 * Creates `<slug>_repo/`, `<slug>_workspace_repo/`, seeds `.hframe/` policy templates, builds the zipapp, installs **`./hframe`** into the workspace; default sync rules are in README; optional operator append to **AGENTS.md** via `HFRAME_AGENTS_APPEND_FILE`.
 
@@ -226,7 +226,7 @@ Optional denylist paths are resolved relative to the same `.hframe/` directory o
 
 ## Bootstrap workflow (normative)
 
-High-level steps performed by **`hframe-bootstrap`** (see [README.md](README.md)):
+High-level steps performed by **`h-frame-bootstrap`** (see [README.md](README.md)):
 
 1. **Clone** the URL into **`<slug>_repo/`** (protected).
 2. **Copy** tree to **`<slug>_workspace_repo/`** (workspace).
@@ -241,7 +241,7 @@ High-level steps performed by **`hframe-bootstrap`** (see [README.md](README.md)
 
 ## Policy model
 
-### Allowlist mode (default from `hframe-bootstrap`)
+### Allowlist mode (default from `h-frame-bootstrap`)
 
 * **Path lines** in **`.hframe/policy.allowlist`** (repo-root-relative globs/paths; see README for directive syntax). Bootstrap seeds one line per **top-level** clone path that Git does not ignore (directories as `name/**`, files as `name`), using **`git check-ignore`** so nested ignore rules apply.
 * **Optional** **`.hframe/policy.denylist`** — user globs merged **after** built-in denies and **before** allow rules. Bootstrap seeds this from the protected clone’s **root `.gitignore`** (pattern lines only; `!` negation omitted).
